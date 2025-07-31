@@ -9,6 +9,9 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 import { collection, addDoc } from "firebase/firestore"; 
 import { db } from '@/lib/firebase';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
 
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -182,12 +185,11 @@ export default function DashboardPage() {
     
     const handleGeneratePdf = async (data: ODFormValues) => {
         try {
-            const docRef = await addDoc(collection(db, "od-requests"), {
+            await addDoc(collection(db, "od-requests"), {
                 ...data,
                 eventDate: data.eventDate ? format(data.eventDate, 'yyyy-MM-dd') : null,
                 createdAt: new Date(),
             });
-            console.log("Document written with ID: ", docRef.id);
             toast({
                 title: "Success",
                 description: "OD information has been saved to the database.",
@@ -200,6 +202,80 @@ export default function DashboardPage() {
                 description: "There was an error saving the OD information.",
             });
         }
+    
+        const doc = new jsPDF();
+        (doc as any).autoTable({
+            html: '#my-table',
+        });
+    
+        // Add content to the PDF
+        doc.setFontSize(20);
+        doc.text("Amity University", 105, 20, { align: 'center' });
+        doc.setFontSize(16);
+        doc.text("On-Duty Application Form", 105, 30, { align: 'center' });
+    
+        let yPos = 45;
+    
+        // Faculty Coordinator Details
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Faculty Coordinator Information", 14, yPos);
+        yPos += 7;
+        (doc as any).autoTable({
+            startY: yPos,
+            head: [['Name', 'Email']],
+            body: [[data.facultyCoordinatorName, data.facultyCoordinatorEmail]],
+            theme: 'grid',
+            styles: { fontSize: 10 },
+            headStyles: { fillColor: [22, 160, 133] },
+        });
+        yPos = (doc as any).lastAutoTable.finalY + 10;
+    
+        // Event Details
+        doc.setFont('helvetica', 'bold');
+        doc.text("Event Information", 14, yPos);
+        yPos += 7;
+        (doc as any).autoTable({
+            startY: yPos,
+            head: [['Event Name', 'Date', 'Day', 'From', 'To']],
+            body: [[
+                data.eventName,
+                data.eventDate ? format(data.eventDate, "PPP") : 'N/A',
+                data.eventDay,
+                data.eventFromTime,
+                data.eventToTime,
+            ]],
+            theme: 'grid',
+            styles: { fontSize: 10 },
+            headStyles: { fillColor: [22, 160, 133] },
+        });
+        yPos = (doc as any).lastAutoTable.finalY + 10;
+    
+        // Classes and Lectures
+        doc.setFont('helvetica', 'bold');
+        doc.text("Affected Classes & Lectures", 14, yPos);
+        yPos += 7;
+    
+        data.classes.forEach((classInfo, index) => {
+            const classHeader = `Class: ${classInfo.course} ${classInfo.program} - Semester ${classInfo.semester} (Section ${classInfo.section})`;
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text(classHeader, 14, yPos);
+            yPos += 6;
+    
+            const lectureBody = classInfo.lectures.map(lec => [lec.subject, lec.faculty, `${lec.fromTime} - ${lec.toTime}`]);
+            (doc as any).autoTable({
+                startY: yPos,
+                head: [['Subject', 'Faculty', 'Time Slot']],
+                body: lectureBody,
+                theme: 'striped',
+                styles: { fontSize: 9 },
+                headStyles: { fillColor: [41, 128, 185] },
+            });
+            yPos = (doc as any).lastAutoTable.finalY + 8;
+        });
+    
+        doc.save(`OD_Application_${data.eventName.replace(/ /g, '_')}.pdf`);
     };
 
     const handleSendEmail = (data: ODFormValues) => {
