@@ -2,9 +2,9 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useFieldArray, useForm, FormProvider, useFormContext, Control } from 'react-hook-form';
+import { useFieldArray, useForm, FormProvider } from 'react-hook-form';
 import * as z from 'zod';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 
@@ -19,8 +19,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, Clock, LogOut, GraduationCap } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, LogOut, GraduationCap } from 'lucide-react';
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -53,15 +54,6 @@ const odFormSchema = z.object({
 
 type ODFormValues = z.infer<typeof odFormSchema>;
 
-const timeSlots = Array.from({ length: 96 }, (_, i) => {
-    const totalMinutes = i * 15;
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    const formattedHours = hours.toString().padStart(2, '0');
-    const formattedMinutes = minutes.toString().padStart(2, '0');
-    return `${formattedHours}:${formattedMinutes}`;
-});
-
 const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: string; icon: React.ElementType, children: React.ReactNode, titleClassName?: string }) => (
     <div className="glass-panel p-6 md:p-8">
         <div className="flex items-center mb-6">
@@ -72,8 +64,7 @@ const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: 
     </div>
 );
 
-const ClassAccordionItem = ({ classField, classIndex, removeClass }: { classField: any, classIndex: number, removeClass: (index: number) => void }) => {
-    const { control } = useFormContext<ODFormValues>();
+const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form }: { classField: any, classIndex: number, removeClass: (index: number) => void, control: any, form: any }) => {
     const { fields: lectureFields, append: appendLecture, remove: removeLecture } = useFieldArray({
         control,
         name: `classes.${classIndex}.lectures`
@@ -108,8 +99,8 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass }: { classFiel
                                     <div className="grid md:grid-cols-2 gap-4">
                                         <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.subject`} render={({ field }) => (<FormItem><FormLabel>Subject Name + Code</FormLabel><FormControl><Input placeholder="e.g., Intro to CS | CS101" {...field} className="transition-all duration-300 focus:shadow-neon-primary"/></FormControl><FormMessage /></FormItem>)} />
                                         <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.faculty`} render={({ field }) => (<FormItem><FormLabel>Faculty Name + Code</FormLabel><FormControl><Input placeholder="e.g., Dr. Alan Turing | CST01" {...field} className="transition-all duration-300 focus:shadow-neon-primary"/></FormControl><FormMessage /></FormItem>)} />
-                                        <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.fromTime`} render={({ field }) => (<FormItem><FormLabel>From</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="transition-all duration-300 focus:shadow-neon-primary"><SelectValue placeholder="Select time" /></SelectTrigger></FormControl><SelectContent>{timeSlots.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
-                                        <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.toTime`} render={({ field }) => (<FormItem><FormLabel>To</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="transition-all duration-300 focus:shadow-neon-primary"><SelectValue placeholder="Select time" /></SelectTrigger></FormControl><SelectContent>{timeSlots.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
+                                        <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.fromTime`} render={({ field }) => (<FormItem><FormLabel>From</FormLabel><FormControl><Input type="time" {...field} className="transition-all duration-300 focus:shadow-neon-primary"/></FormControl><FormMessage /></FormItem>)} />
+                                        <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.toTime`} render={({ field }) => (<FormItem><FormLabel>To</FormLabel><FormControl><Input type="time" {...field} className="transition-all duration-300 focus:shadow-neon-primary"/></FormControl><FormMessage /></FormItem>)} />
                                     </div>
                                     <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.students`} render={({ field }) => (<FormItem><FormLabel>Student List</FormLabel><FormControl><Textarea placeholder="Enter one student per line (Name + Enrollment No.)" {...field} className="transition-all duration-300 focus:shadow-neon-primary min-h-[120px]"/></FormControl><FormMessage /></FormItem>)} />
                                     <div className="flex justify-end items-center gap-2">
@@ -128,7 +119,6 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass }: { classFiel
         </AccordionItem>
     );
 }
-
 
 export default function DashboardPage() {
     const { toast } = useToast();
@@ -174,122 +164,122 @@ export default function DashboardPage() {
     
     return (
         <FormProvider {...form}>
-            <div className="max-w-7xl mx-auto space-y-8 pb-32 p-4 md:p-0">
-                <header className="flex items-center justify-between py-4">
-                    <div className="flex items-center gap-3">
-                        <GraduationCap className="w-8 h-8 text-primary text-glow" />
-                        <h1 className="text-2xl font-headline font-bold text-foreground">OD Automator</h1>
-                    </div>
-                    <Link href="/" passHref>
-                        <Button variant="ghost" className="transition-transform hover:scale-105">
-                            <LogOut className="w-4 h-4 mr-2"/>
-                            Sign Out
-                        </Button>
-                    </Link>
-                </header>
-                
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                        
-                        <SectionPanel title="Faculty Coordinator" icon={User}>
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <FormField control={form.control} name="facultyCoordinatorName" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Name</FormLabel>
-                                        <FormControl><Input placeholder="e.g., Dr. Jane Doe" {...field} className="transition-all duration-300 focus:shadow-neon-primary"/></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}/>
-                                <FormField control={form.control} name="facultyCoordinatorEmail" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Email</FormLabel>
-                                        <FormControl><Input placeholder="e.g., jane.doe@example.com" {...field} className="transition-all duration-300 focus:shadow-neon-primary"/></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}/>
-                            </div>
-                        </SectionPanel>
-
-                        <SectionPanel title="Event Details" icon={CalendarIcon}>
-                            <div className="grid md:grid-cols-2 gap-6 items-start">
-                                <FormField control={form.control} name="eventName" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Event Name</FormLabel>
-                                        <FormControl><Input placeholder="e.g., CodeFest 2024" {...field} className="transition-all duration-300 focus:shadow-neon-primary"/></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}/>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                                    <FormField control={form.control} name="eventDate" render={({ field }) => (
-                                        <FormItem className="flex flex-col">
-                                            <FormLabel>Date</FormLabel>
-                                            <Popover>
-                                                <PopoverTrigger asChild>
-                                                    <FormControl>
-                                                        <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal transition-all duration-300 focus:shadow-neon-primary", !field.value && "text-muted-foreground")}>
-                                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                                        </Button>
-                                                    </FormControl>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-auto p-0" align="start">
-                                                    <Calendar mode="single" selected={field.value} onSelect={(date) => {
-                                                        field.onChange(date);
-                                                        if(date) form.setValue('eventDay', format(date, 'EEEE'));
-                                                    }} initialFocus />
-                                                </PopoverContent>
-                                            </Popover>
+            <ScrollArea className="h-screen">
+                <div className="max-w-7xl mx-auto space-y-8 pb-32 p-4 md:p-8">
+                    <header className="flex items-center justify-between py-4">
+                        <div className="flex items-center gap-3">
+                            <GraduationCap className="w-8 h-8 text-primary text-glow" />
+                            <h1 className="text-2xl font-headline font-bold text-foreground">OD Automator</h1>
+                        </div>
+                        <Link href="/" passHref>
+                            <Button variant="ghost" className="transition-transform hover:scale-105">
+                                <LogOut className="w-4 h-4 mr-2"/>
+                                Sign Out
+                            </Button>
+                        </Link>
+                    </header>
+                    
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                            
+                            <SectionPanel title="Faculty Coordinator" icon={User}>
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <FormField control={form.control} name="facultyCoordinatorName" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Name</FormLabel>
+                                            <FormControl><Input placeholder="e.g., Dr. Jane Doe" {...field} className="transition-all duration-300 focus:shadow-neon-primary"/></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}/>
-                                    <FormField control={form.control} name="eventDay" render={({ field }) => (
+                                    <FormField control={form.control} name="facultyCoordinatorEmail" render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Day</FormLabel>
-                                            <FormControl><Input placeholder="Auto-filled" {...field} readOnly className="bg-muted/50"/></FormControl>
+                                            <FormLabel>Email</FormLabel>
+                                            <FormControl><Input placeholder="e.g., jane.doe@example.com" {...field} className="transition-all duration-300 focus:shadow-neon-primary"/></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}/>
                                 </div>
-                                <div className="grid grid-cols-2 gap-6 md:col-span-2">
-                                    <FormField control={form.control} name="eventFromTime" render={({ field }) => (
+                            </SectionPanel>
+
+                            <SectionPanel title="Event Details" icon={CalendarIcon}>
+                                <div className="grid md:grid-cols-2 gap-6 items-start">
+                                    <FormField control={form.control} name="eventName" render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>From</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl>
-                                                <SelectTrigger className="transition-all duration-300 focus:shadow-neon-primary"><SelectValue placeholder="Select time" /></SelectTrigger>
-                                            </FormControl><SelectContent>{timeSlots.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}</SelectContent></Select>
+                                            <FormLabel>Event Name</FormLabel>
+                                            <FormControl><Input placeholder="e.g., CodeFest 2024" {...field} className="transition-all duration-300 focus:shadow-neon-primary"/></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}/>
-                                    <FormField control={form.control} name="eventToTime" render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>To</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl>
-                                                <SelectTrigger className="transition-all duration-300 focus:shadow-neon-primary"><SelectValue placeholder="Select time" /></SelectTrigger>
-                                            </FormControl><SelectContent>{timeSlots.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}</SelectContent></Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}/>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                        <FormField control={form.control} name="eventDate" render={({ field }) => (
+                                            <FormItem className="flex flex-col">
+                                                <FormLabel>Date</FormLabel>
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                        <FormControl>
+                                                            <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal transition-all duration-300 focus:shadow-neon-primary", !field.value && "text-muted-foreground")}>
+                                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                                            </Button>
+                                                        </FormControl>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-auto p-0" align="start">
+                                                        <Calendar mode="single" selected={field.value} onSelect={(date) => {
+                                                            field.onChange(date);
+                                                            if(date) form.setValue('eventDay', format(date, 'EEEE'));
+                                                        }} initialFocus />
+                                                    </PopoverContent>
+                                                </Popover>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}/>
+                                        <FormField control={form.control} name="eventDay" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Day</FormLabel>
+                                                <FormControl><Input placeholder="Auto-filled" {...field} readOnly className="bg-muted/50"/></FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}/>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-6 md:col-span-2">
+                                        <FormField control={form.control} name="eventFromTime" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>From</FormLabel>
+                                                <FormControl><Input type="time" {...field} className="transition-all duration-300 focus:shadow-neon-primary"/></FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}/>
+                                        <FormField control={form.control} name="eventToTime" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>To</FormLabel>
+                                                <FormControl><Input type="time" {...field} className="transition-all duration-300 focus:shadow-neon-primary"/></FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}/>
+                                    </div>
                                 </div>
-                            </div>
-                        </SectionPanel>
+                            </SectionPanel>
 
-                        <SectionPanel title="Class & Lecture Details" icon={Building}>
-                            <Accordion type="multiple" className="space-y-4">
-                                {classFields.map((classField, classIndex) => (
-                                    <ClassAccordionItem 
-                                        key={classField.id}
-                                        classField={classField}
-                                        classIndex={classIndex}
-                                        removeClass={removeClass}
-                                    />
-                                ))}
-                            </Accordion>
-                            <Button type="button" onClick={() => appendClass({ id: crypto.randomUUID(), course: '', program: '', semester: '', section: 'A', lectures: []})} className="mt-4 w-full transition-transform hover:scale-105"><PlusCircle className="mr-2 h-4 w-4" /> Add Another Class</Button>
-                        </SectionPanel>
+                            <SectionPanel title="Class & Lecture Details" icon={Building}>
+                                <Accordion type="multiple" className="space-y-4">
+                                    {classFields.map((classField, classIndex) => (
+                                        <ClassAccordionItem 
+                                            key={classField.id}
+                                            classField={classField}
+                                            classIndex={classIndex}
+                                            removeClass={removeClass}
+                                            control={form.control}
+                                            form={form}
+                                        />
+                                    ))}
+                                </Accordion>
+                                <Button type="button" onClick={() => appendClass({ id: crypto.randomUUID(), course: '', program: '', semester: '', section: 'A', lectures: []})} className="mt-4 w-full transition-transform hover:scale-105"><PlusCircle className="mr-2 h-4 w-4" /> Add Another Class</Button>
+                            </SectionPanel>
 
-                    </form>
-                </Form>
-            </div>
+                        </form>
+                    </Form>
+                </div>
+            </ScrollArea>
             
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-lg border-t border-white/10 shadow-lg">
                 <div className="max-w-7xl mx-auto flex items-center justify-center gap-4">
@@ -300,3 +290,5 @@ export default function DashboardPage() {
         </FormProvider>
     );
 }
+
+    
