@@ -7,6 +7,8 @@ import * as z from 'zod';
 import React, { useEffect } from 'react';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import { collection, addDoc } from "firebase/firestore"; 
+import { db } from '@/lib/firebase';
 
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -55,7 +57,7 @@ const odFormSchema = z.object({
 type ODFormValues = z.infer<typeof odFormSchema>;
 
 const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: string; icon: React.ElementType, children: React.ReactNode, titleClassName?: string }) => (
-    <div className="glass-panel p-6 md:p-8 relative overflow-hidden">
+    <div className="glass-panel p-6 md:p-8 relative overflow-hidden group">
         <div className="absolute -inset-px bg-gradient-to-r from-primary/50 to-accent/50 rounded-2xl blur-lg opacity-25 group-hover:opacity-50 transition-opacity duration-500"></div>
         <div className="relative flex items-center mb-6">
             <Icon className="w-6 h-6 mr-3 text-primary" />
@@ -178,12 +180,26 @@ export default function DashboardPage() {
         name: "classes",
     });
     
-    const handleGeneratePdf = (data: ODFormValues) => {
-        console.log("Generating PDF with data:", data);
-        toast({
-            title: "Generate PDF Clicked",
-            description: "PDF generation logic will be implemented here.",
-        });
+    const handleGeneratePdf = async (data: ODFormValues) => {
+        try {
+            const docRef = await addDoc(collection(db, "od-requests"), {
+                ...data,
+                eventDate: data.eventDate ? format(data.eventDate, 'yyyy-MM-dd') : null,
+                createdAt: new Date(),
+            });
+            console.log("Document written with ID: ", docRef.id);
+            toast({
+                title: "Success",
+                description: "OD information has been saved to the database.",
+            });
+        } catch (e) {
+            console.error("Error adding document: ", e);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "There was an error saving the OD information.",
+            });
+        }
     };
 
     const handleSendEmail = (data: ODFormValues) => {
@@ -311,17 +327,18 @@ export default function DashboardPage() {
                                 <Button type="button" onClick={() => appendClass({ id: crypto.randomUUID(), course: '', program: '', semester: '', section: 'A', lectures: []})} className="mt-4 w-full"><PlusCircle className="mr-2 h-4 w-4" /> Add Another Class</Button>
                             </SectionPanel>
                             
-                            <div className="flex flex-col md:flex-row justify-center gap-4">
-                                <Button size="lg" type="button" onClick={form.handleSubmit(handleGeneratePdf)} className="w-full md:w-1/2">
-                                    <FileText className="mr-2 w-5 h-5"/>
-                                    Generate PDF
-                                </Button>
-                                <Button size="lg" type="button" onClick={form.handleSubmit(handleSendEmail)} className="w-full md:w-1/2">
-                                    <Mail className="mr-2 w-5 h-5"/>
-                                    Send Email
-                                </Button>
+                            <div className="sticky bottom-0 z-10 py-4 bg-background/80 backdrop-blur-sm">
+                                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-center gap-4">
+                                    <Button size="lg" type="button" onClick={form.handleSubmit(handleGeneratePdf)} className="w-full md:w-auto md:flex-1">
+                                        <FileText className="mr-2 w-5 h-5"/>
+                                        Generate PDF
+                                    </Button>
+                                    <Button size="lg" type="button" onClick={form.handleSubmit(handleSendEmail)} className="w-full md:w-auto md:flex-1">
+                                        <Mail className="mr-2 w-5 h-5"/>
+                                        Send Email
+                                    </Button>
+                                </div>
                             </div>
-
                         </form>
                     </Form>
                 </div>
