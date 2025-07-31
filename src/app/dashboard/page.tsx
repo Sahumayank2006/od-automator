@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, LogOut, GraduationCap, Copy, Zap, FileJson } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, LogOut, GraduationCap, Copy, Zap } from 'lucide-react';
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -128,7 +128,9 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
                                     <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.students`} render={({ field }) => (<FormItem><FormLabel>Student List</FormLabel><FormControl><Textarea placeholder="Enter one student per line (Name + Enrollment No.)" {...field} className="min-h-[120px]"/></FormControl><FormMessage /></FormItem>)} />
                                     <div className="flex justify-end items-center gap-2">
                                         <Button type="button" size="sm" variant="outline">Extract Students</Button>
-                                        <Button type="button" size="sm" variant="destructive" onClick={() => removeLecture(lectureIndex)}><Trash2 className="w-4 h-4"/></Button>
+                                        {lectureFields.length > 1 && (
+                                            <Button type="button" size="sm" variant="destructive" onClick={() => removeLecture(lectureIndex)}><Trash2 className="w-4 h-4"/></Button>
+                                        )}
                                     </div>
                                 </AccordionContent>
                             </AccordionItem>
@@ -176,24 +178,21 @@ export default function DashboardPage() {
         name: "classes",
     });
     
-    function onSubmit(data: ODFormValues) {
-        console.log(data);
-        const jsonData = JSON.stringify(data, null, 2);
-        const blob = new Blob([jsonData], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'od_form_data.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
+    const handleGeneratePdf = (data: ODFormValues) => {
+        console.log("Generating PDF with data:", data);
         toast({
-            title: "Form Data Downloaded!",
-            description: "The form data has been saved as a JSON file.",
+            title: "Generate PDF Clicked",
+            description: "PDF generation logic will be implemented here.",
         });
-    }
+    };
+
+    const handleSendEmail = (data: ODFormValues) => {
+        console.log("Sending Email with data:", data);
+        toast({
+            title: "Send Email Clicked",
+            description: "Email sending logic will be implemented here.",
+        });
+    };
     
     return (
         <FormProvider {...form}>
@@ -213,7 +212,7 @@ export default function DashboardPage() {
                     </header>
                     
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                        <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
                             
                             <div className="grid md:grid-cols-2 gap-8">
                                 <SectionPanel title="Faculty Coordinator" icon={User}>
@@ -312,10 +311,14 @@ export default function DashboardPage() {
                                 <Button type="button" onClick={() => appendClass({ id: crypto.randomUUID(), course: '', program: '', semester: '', section: 'A', lectures: []})} className="mt-4 w-full"><PlusCircle className="mr-2 h-4 w-4" /> Add Another Class</Button>
                             </SectionPanel>
                             
-                            <div className="flex justify-center">
-                                <Button size="lg" type="submit" className="w-full md:w-1/2">
-                                    <FileJson className="mr-2 w-5 h-5"/>
-                                    Download Form Data as JSON
+                            <div className="flex flex-col md:flex-row justify-center gap-4">
+                                <Button size="lg" type="button" onClick={form.handleSubmit(handleGeneratePdf)} className="w-full md:w-1/2">
+                                    <FileText className="mr-2 w-5 h-5"/>
+                                    Generate PDF
+                                </Button>
+                                <Button size="lg" type="button" onClick={form.handleSubmit(handleSendEmail)} className="w-full md:w-1/2">
+                                    <Mail className="mr-2 w-5 h-5"/>
+                                    Send Email
                                 </Button>
                             </div>
 
