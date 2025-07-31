@@ -20,7 +20,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, Clock, LogOut } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, Clock, LogOut, GraduationCap } from 'lucide-react';
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -137,7 +137,7 @@ export default function DashboardPage() {
         const timer = setTimeout(() => {
             toast({
                 title: "Timetables Loaded",
-                description: "Timetables loaded from local storage.",
+                description: "Your saved timetables have been loaded from local storage.",
             });
         }, 1000);
         return () => clearTimeout(timer);
@@ -174,11 +174,11 @@ export default function DashboardPage() {
     
     return (
         <FormProvider {...form}>
-            <div className="max-w-7xl mx-auto space-y-8 pb-32">
+            <div className="max-w-7xl mx-auto space-y-8 pb-32 p-4 md:p-0">
                 <header className="flex items-center justify-between py-4">
-                    <div className="text-center md:text-left">
-                        <h1 className="text-4xl font-headline font-bold text-foreground text-glow">OD Nimbus</h1>
-                        <p className="text-muted-foreground">AMITY UNIVERSITY OD Automator</p>
+                    <div className="flex items-center gap-3">
+                        <GraduationCap className="w-8 h-8 text-primary text-glow" />
+                        <h1 className="text-2xl font-headline font-bold text-foreground">OD Automator</h1>
                     </div>
                     <Link href="/" passHref>
                         <Button variant="ghost" className="transition-transform hover:scale-105">
@@ -291,7 +291,7 @@ export default function DashboardPage() {
                 </Form>
             </div>
             
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/50 backdrop-blur-lg border-t border-white/10 shadow-lg">
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-lg border-t border-white/10 shadow-lg">
                 <div className="max-w-7xl mx-auto flex items-center justify-center gap-4">
                     <Button size="lg" className="flex-1 md:flex-none transition-transform hover:scale-105 hover:shadow-neon-primary"><FileText className="mr-2 w-5 h-5"/>Generate PDF</Button>
                     <Button size="lg" className="flex-1 md:flex-none transition-transform hover:scale-105 hover:shadow-neon-primary"><Mail className="mr-2 w-5 h-5"/>Send Email</Button>
