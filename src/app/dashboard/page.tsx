@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, LogOut, GraduationCap } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, LogOut, GraduationCap, Copy, Zap } from 'lucide-react';
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -55,12 +55,16 @@ const odFormSchema = z.object({
 type ODFormValues = z.infer<typeof odFormSchema>;
 
 const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: string; icon: React.ElementType, children: React.ReactNode, titleClassName?: string }) => (
-    <div className="glass-panel p-6 md:p-8">
-        <div className="flex items-center mb-6">
+    <div className="glass-panel p-6 md:p-8 relative overflow-hidden">
+        <Zap className="absolute -top-4 -left-4 w-20 h-20 text-primary/10 opacity-50 -rotate-12" />
+        <Zap className="absolute -bottom-8 -right-2 w-24 h-24 text-primary/10 opacity-50 rotate-[24deg]" />
+        <div className="flex items-center mb-6 relative">
             <Icon className="w-7 h-7 mr-3 text-primary" />
             <h2 className={cn("text-2xl font-headline font-semibold text-foreground text-glow", titleClassName)}>{title}</h2>
         </div>
-        {children}
+        <div className="relative">
+            {children}
+        </div>
     </div>
 );
 
@@ -69,6 +73,22 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
         control,
         name: `classes.${classIndex}.lectures`
     });
+    const { toast } = useToast();
+
+    const handleCopyStudents = () => {
+        const lectures = form.getValues(`classes.${classIndex}.lectures`);
+        if (lectures && lectures.length > 1) {
+            const firstStudents = lectures[0].students;
+            for (let i = 1; i < lectures.length; i++) {
+                form.setValue(`classes.${classIndex}.lectures.${i}.students`, firstStudents, { shouldValidate: true, shouldDirty: true });
+            }
+            toast({
+                title: "Students Copied",
+                description: "The student list from the first lecture has been copied to all other lectures in this class.",
+            });
+        }
+    };
+
 
     return (
         <AccordionItem value={classField.id} className="glass-panel !border-t-0 p-4 rounded-2xl overflow-hidden">
@@ -86,9 +106,14 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
                 <FormField control={control} name={`classes.${classIndex}.section`} render={({ field }) => (<FormItem><FormLabel>Section</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-4">{['A', 'B', 'C', 'D', 'E'].map(sec => <FormItem key={sec} className="flex items-center space-x-2"><FormControl><RadioGroupItem value={sec} /></FormControl><FormLabel className="font-normal">{sec}</FormLabel></FormItem>)}</RadioGroup></FormControl><FormMessage /></FormItem>)} />
                 
                 <div className="border-t border-white/10 pt-6 mt-6">
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
                         <h4 className="text-md font-headline font-semibold flex items-center"><BookOpen className="w-5 h-5 mr-2 text-primary"/>Lecture Details</h4>
-                        <Button type="button" size="sm" variant="ghost" className="transition-transform hover:scale-105" onClick={() => appendLecture({ id: crypto.randomUUID(), subject: '', faculty: '', fromTime: '', toTime: '', students: ''})}><PlusCircle className="mr-2 h-4 w-4"/>Add Another Lecture</Button>
+                        <div className="flex gap-2">
+                           {lectureFields.length > 1 && (
+                                <Button type="button" size="sm" variant="outline" onClick={handleCopyStudents} className="transition-transform hover:scale-105"><Copy className="mr-2 h-4 w-4"/>Copy Students</Button>
+                           )}
+                            <Button type="button" size="sm" variant="ghost" className="transition-transform hover:scale-105" onClick={() => appendLecture({ id: crypto.randomUUID(), subject: '', faculty: '', fromTime: '', toTime: '', students: ''})}><PlusCircle className="mr-2 h-4 w-4"/>Add Lecture</Button>
+                        </div>
                     </div>
                     <Button type="button" size="sm" className="mb-4 transition-transform hover:scale-105"><Bot className="w-4 h-4 mr-2" />Autofill Conflicting Lectures</Button>
                     <Accordion type="multiple" className="space-y-2">
