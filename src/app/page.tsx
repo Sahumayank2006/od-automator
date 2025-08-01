@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { User, KeyRound } from 'lucide-react';
 
 const AmityLogoPlaceholder = () => (
   <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 text-primary ring-4 ring-primary/20">
@@ -24,13 +25,21 @@ export default function AuthPage() {
               <CardTitle className="text-xl font-headline font-bold uppercase tracking-widest text-primary text-glow">Amity University</CardTitle>
               <CardDescription className="text-5xl font-headline font-bold text-foreground text-glow !mt-2">OD Automator</CardDescription>
               <p className="text-muted-foreground font-body mt-4">
-                Streamline your On-Duty requests with our intelligent AI-powered form. You can configure timetables in the settings.
+                Streamline your On-Duty requests with our intelligent AI-powered form.
               </p>
             </CardHeader>
-            <CardContent className="mt-6">
+            <CardContent className="mt-6 space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="userId" className="flex items-center text-muted-foreground"><User className="w-4 h-4 mr-2"/>User ID</Label>
+                <Input id="userId" type="text" placeholder="Enter your User ID" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="flex items-center text-muted-foreground"><KeyRound className="w-4 h-4 mr-2"/>Password / Code</Label>
+                <Input id="password" type="password" placeholder="Enter your password or code" />
+              </div>
                <Link href="/dashboard" passHref>
                   <Button type="submit" size="lg" className="w-full transition-all duration-300 hover:scale-105 hover:shadow-neon-primary !font-bold !text-lg">
-                    Go to Dashboard
+                    Sign In
                   </Button>
                 </Link>
             </CardContent>
