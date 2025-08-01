@@ -185,11 +185,35 @@ export default function DashboardPage() {
     
     const handleSaveToDb = async (data: ODFormValues) => {
         try {
-            await addDoc(collection(db, "od-requests"), {
-                ...data,
-                eventDate: data.eventDate ? format(data.eventDate, 'yyyy-MM-dd') : null,
+            const transformedData = {
+                facultyCoordinator: {
+                    name: data.facultyCoordinatorName,
+                    email: data.facultyCoordinatorEmail,
+                },
+                eventDetails: {
+                    name: data.eventName,
+                    date: data.eventDate ? format(data.eventDate, 'yyyy-MM-dd') : null,
+                    day: data.eventDay,
+                    fromTime: data.eventFromTime,
+                    toTime: data.eventToTime,
+                },
+                classes: data.classes.map(c => ({
+                    course: c.course,
+                    program: c.program,
+                    semester: c.semester,
+                    section: c.section,
+                    lectures: c.lectures.map(l => ({
+                        subject: l.subject,
+                        faculty: l.faculty,
+                        timeSlot: `${l.fromTime} - ${l.toTime}`,
+                        students: l.students.split('\n').filter(s => s.trim() !== ''),
+                    })),
+                })),
                 createdAt: new Date(),
-            });
+            };
+
+            await addDoc(collection(db, "od-requests"), transformedData);
+            
             toast({
                 title: "Success",
                 description: "OD information has been saved to the database.",
