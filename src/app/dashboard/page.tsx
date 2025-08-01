@@ -345,10 +345,43 @@ export default function DashboardPage() {
     };
 
     const handleSendEmail = (data: ODFormValues) => {
-        console.log("Sending Email with data:", data);
+        const to = data.facultyCoordinatorEmail || '';
+        const subject = "On-Duty Request";
+        
+        const activityDateTime = data.eventDate ? 
+            `${format(data.eventDate, "MMMM d")} & ${data.eventFromTime} - ${data.eventToTime}` 
+            : 'N/A';
+        
+        let body = `Dear Coordinator,\n\n`;
+        body += `This is to certify that a student was on duty for the following activity:\n`;
+        body += `Activity Date and Time: ${activityDateTime}\n`;
+        body += `Purpose: ${data.eventName}\n\n`;
+        body += `The following classes will be covered:\n`;
+        body += `=====================================\n\n`;
+        
+        data.classes.forEach(classInfo => {
+            classInfo.lectures.forEach(lecture => {
+                const students = lecture.students.split('\n').filter(s => s.trim() !== '');
+                students.forEach(student => {
+                    body += `Section: ${classInfo.program} - ${classInfo.section}\n`;
+                    body += `Student: ${student}\n`;
+                    body += `Subject: ${lecture.subject}\n`;
+                    body += `Faculty: ${lecture.faculty}\n`;
+                    body += `Time: ${lecture.fromTime} - ${lecture.toTime}\n`;
+                    body += `=====================================\n\n`;
+                });
+            });
+        });
+        
+        body += `Thank you.`;
+        
+        const mailtoLink = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        
+        window.location.href = mailtoLink;
+
         toast({
-            title: "Send Email Clicked",
-            description: "Email sending logic will be implemented here.",
+            title: "Opening Email Client",
+            description: "Your email client should open shortly to send the OD request.",
         });
     };
     
