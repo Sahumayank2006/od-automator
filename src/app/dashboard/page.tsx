@@ -7,8 +7,6 @@ import * as z from 'zod';
 import React, { useEffect, useState } from 'react';
 import { format, addMinutes } from 'date-fns';
 import Link from 'next/link';
-import { collection, addDoc } from "firebase/firestore"; 
-import { db } from '@/lib/firebase';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { sendEmail } from './actions';
@@ -27,7 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, LogOut, GraduationCap, Copy, Zap, Save } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, LogOut, GraduationCap, Copy, Zap } from 'lucide-react';
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -229,51 +227,6 @@ export default function DashboardPage() {
         name: "classes",
     });
     
-    const handleSaveToDb = async (data: ODFormValues) => {
-        try {
-            const transformedData = {
-                facultyCoordinator: {
-                    name: data.facultyCoordinatorName,
-                    email: data.facultyCoordinatorEmail,
-                },
-                eventDetails: {
-                    name: data.eventName,
-                    date: data.eventDate ? format(data.eventDate, 'yyyy-MM-dd') : null,
-                    day: data.eventDay,
-                    fromTime: data.eventFromTime,
-                    toTime: data.eventToTime,
-                },
-                classes: data.classes.map(c => ({
-                    course: c.course,
-                    program: c.program,
-                    semester: c.semester,
-                    section: c.section,
-                    lectures: c.lectures.map(l => ({
-                        subject: l.subject,
-                        faculty: l.faculty,
-                        timeSlot: `${l.fromTime} - ${l.toTime}`,
-                        students: l.students.split('\n').filter(s => s.trim() !== ''),
-                    })),
-                })),
-                createdAt: new Date(),
-            };
-
-            await addDoc(collection(db, "od-requests"), transformedData);
-            
-            toast({
-                title: "Success",
-                description: "OD information has been saved to the database.",
-            });
-        } catch (e) {
-            console.error("Error adding document: ", e);
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "There was an error saving the OD information.",
-            });
-        }
-    };
-
     const handleGeneratePdf = (data: ODFormValues) => {
         const doc = new jsPDF();
     
@@ -493,10 +446,6 @@ export default function DashboardPage() {
                                     <Button size="lg" type="button" onClick={form.handleSubmit(handleGeneratePdf)} className="w-full md:w-auto md:flex-1">
                                         <FileText className="mr-2 w-5 h-5"/>
                                         Generate PDF
-                                    </Button>
-                                    <Button size="lg" type="button" onClick={form.handleSubmit(handleSaveToDb)} className="w-full md:w-auto md:flex-1">
-                                        <Save className="mr-2 w-5 h-5"/>
-                                        Save to Database
                                     </Button>
                                     <Button size="lg" type="button" onClick={form.handleSubmit(handleSendEmail)} disabled={isSending} className="w-full md:w-auto md:flex-1">
                                         <Mail className="mr-2 w-5 h-5"/>
