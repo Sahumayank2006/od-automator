@@ -206,9 +206,6 @@ export default function DashboardPage() {
 
     const handleGeneratePdf = (data: ODFormValues) => {
         const doc = new jsPDF();
-        (doc as any).autoTable({
-            html: '#my-table',
-        });
     
         // Add content to the PDF
         doc.setFontSize(20);
@@ -428,5 +425,3 @@ export default function DashboardPage() {
         </FormProvider>
     );
 }
-
-    
