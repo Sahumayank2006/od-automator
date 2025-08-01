@@ -7,19 +7,19 @@ import type { ODFormValues } from './page';
 
 export async function sendEmail(data: ODFormValues) {
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: Number(process.env.SMTP_PORT) === 465, // true for 465, false for other ports
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // true for 465
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: process.env.GMAIL_EMAIL,
+      pass: process.env.GMAIL_APP_PASSWORD,
     },
   });
 
   const emailHtml = render(ODRequestEmail({ data }));
 
   const options = {
-    from: `"OD Automator" <${process.env.SMTP_USER}>`,
+    from: `"OD Automator" <${process.env.GMAIL_EMAIL}>`,
     to: data.facultyCoordinatorEmail,
     subject: `On-Duty Request: ${data.eventName}`,
     html: emailHtml,
