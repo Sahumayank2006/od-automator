@@ -26,7 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, LogOut, GraduationCap, Copy, Zap } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, LogOut, GraduationCap, Copy, Zap, Save } from 'lucide-react';
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -183,7 +183,7 @@ export default function DashboardPage() {
         name: "classes",
     });
     
-    const handleGeneratePdf = async (data: ODFormValues) => {
+    const handleSaveToDb = async (data: ODFormValues) => {
         try {
             await addDoc(collection(db, "od-requests"), {
                 ...data,
@@ -202,7 +202,9 @@ export default function DashboardPage() {
                 description: "There was an error saving the OD information.",
             });
         }
-    
+    };
+
+    const handleGeneratePdf = (data: ODFormValues) => {
         const doc = new jsPDF();
         (doc as any).autoTable({
             html: '#my-table',
@@ -409,6 +411,10 @@ export default function DashboardPage() {
                                         <FileText className="mr-2 w-5 h-5"/>
                                         Generate PDF
                                     </Button>
+                                    <Button size="lg" type="button" onClick={form.handleSubmit(handleSaveToDb)} className="w-full md:w-auto md:flex-1">
+                                        <Save className="mr-2 w-5 h-5"/>
+                                        Save to Database
+                                    </Button>
                                     <Button size="lg" type="button" onClick={form.handleSubmit(handleSendEmail)} className="w-full md:w-auto md:flex-1">
                                         <Mail className="mr-2 w-5 h-5"/>
                                         Send Email
@@ -422,3 +428,5 @@ export default function DashboardPage() {
         </FormProvider>
     );
 }
+
+    
