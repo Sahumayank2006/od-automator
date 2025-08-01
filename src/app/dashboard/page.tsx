@@ -4,13 +4,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm, FormProvider } from 'react-hook-form';
 import * as z from 'zod';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { format, addMinutes } from 'date-fns';
 import Link from 'next/link';
 import { collection, addDoc } from "firebase/firestore"; 
 import { db } from '@/lib/firebase';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { sendEmail } from './actions';
 
 
 import { Button } from '@/components/ui/button';
@@ -57,7 +58,7 @@ const odFormSchema = z.object({
   classes: z.array(classSchema).min(1, "At least one class must be added."),
 });
 
-type ODFormValues = z.infer<typeof odFormSchema>;
+export type ODFormValues = z.infer<typeof odFormSchema>;
 
 const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: string; icon: React.ElementType, children: React.ReactNode, titleClassName?: string }) => (
     <div className="glass-panel p-6 md:p-8 relative overflow-hidden group">
@@ -195,6 +196,8 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
 
 export default function DashboardPage() {
     const { toast } = useToast();
+    const [isSending, setIsSending] = useState(false);
+
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -344,45 +347,28 @@ export default function DashboardPage() {
         doc.save(`OD_Application_${data.eventName.replace(/ /g, '_')}.pdf`);
     };
 
-    const handleSendEmail = (data: ODFormValues) => {
-        const to = data.facultyCoordinatorEmail || '';
-        const subject = "On-Duty Request";
-        
-        const activityDateTime = data.eventDate ? 
-            `${format(data.eventDate, "MMMM d")} & ${data.eventFromTime} - ${data.eventToTime}` 
-            : 'N/A';
-        
-        let body = `Dear Coordinator,\n\n`;
-        body += `This is to certify that a student was on duty for the following activity:\n`;
-        body += `Activity Date and Time: ${activityDateTime}\n`;
-        body += `Purpose: ${data.eventName}\n\n`;
-        body += `The following classes will be covered:\n`;
-        body += `=====================================\n\n`;
-        
-        data.classes.forEach(classInfo => {
-            classInfo.lectures.forEach(lecture => {
-                const students = lecture.students.split('\n').filter(s => s.trim() !== '');
-                students.forEach(student => {
-                    body += `Section: ${classInfo.program} - ${classInfo.section}\n`;
-                    body += `Student: ${student}\n`;
-                    body += `Subject: ${lecture.subject}\n`;
-                    body += `Faculty: ${lecture.faculty}\n`;
-                    body += `Time: ${lecture.fromTime} - ${lecture.toTime}\n`;
-                    body += `=====================================\n\n`;
+    const handleSendEmail = async (data: ODFormValues) => {
+        setIsSending(true);
+        try {
+            const response = await sendEmail(data);
+            if (response.success) {
+                toast({
+                    title: "Email Sent",
+                    description: "The OD request email has been sent successfully.",
                 });
+            } else {
+                throw new Error(response.error);
+            }
+        } catch (error) {
+            console.error("Error sending email:", error);
+            toast({
+                variant: "destructive",
+                title: "Error Sending Email",
+                description: error instanceof Error ? error.message : "An unknown error occurred.",
             });
-        });
-        
-        body += `Thank you.`;
-        
-        const mailtoLink = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        
-        window.location.href = mailtoLink;
-
-        toast({
-            title: "Opening Email Client",
-            description: "Your email client should open shortly to send the OD request.",
-        });
+        } finally {
+            setIsSending(false);
+        }
     };
     
     return (
@@ -512,9 +498,9 @@ export default function DashboardPage() {
                                         <Save className="mr-2 w-5 h-5"/>
                                         Save to Database
                                     </Button>
-                                    <Button size="lg" type="button" onClick={form.handleSubmit(handleSendEmail)} className="w-full md:w-auto md:flex-1">
+                                    <Button size="lg" type="button" onClick={form.handleSubmit(handleSendEmail)} disabled={isSending} className="w-full md:w-auto md:flex-1">
                                         <Mail className="mr-2 w-5 h-5"/>
-                                        Send Email
+                                        {isSending ? 'Sending...' : 'Send Email'}
                                     </Button>
                                 </div>
                             </div>
