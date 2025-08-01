@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm, FormProvider } from 'react-hook-form';
 import * as z from 'zod';
 import React, { useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, addMinutes } from 'date-fns';
 import Link from 'next/link';
 import { collection, addDoc } from "firebase/firestore"; 
 import { db } from '@/lib/firebase';
@@ -79,6 +79,20 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
     });
     const { toast } = useToast();
 
+    const lectureStartTimes = ["09:15", "10:15", "11:15", "13:15", "14:15", "15:15", "16:15"];
+
+    const handleStartTimeChange = (value: string, lectureIndex: number) => {
+        form.setValue(`classes.${classIndex}.lectures.${lectureIndex}.fromTime`, value, { shouldValidate: true, shouldDirty: true });
+        if (value) {
+            const [hours, minutes] = value.split(':').map(Number);
+            const startDate = new Date();
+            startDate.setHours(hours, minutes, 0, 0);
+            const endDate = addMinutes(startDate, 55);
+            const toTime = format(endDate, 'HH:mm');
+            form.setValue(`classes.${classIndex}.lectures.${lectureIndex}.toTime`, toTime, { shouldValidate: true, shouldDirty: true });
+        }
+    };
+
     const handleCopyStudents = () => {
         const lectures = form.getValues(`classes.${classIndex}.lectures`);
         if (lectures && lectures.length > 1) {
@@ -127,8 +141,37 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
                                     <div className="grid md:grid-cols-2 gap-4">
                                         <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.subject`} render={({ field }) => (<FormItem><FormLabel>Subject Name + Code</FormLabel><FormControl><Input placeholder="e.g., Intro to CS | CS101" {...field} /></FormControl><FormMessage /></FormItem>)} />
                                         <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.faculty`} render={({ field }) => (<FormItem><FormLabel>Faculty Name + Code</FormLabel><FormControl><Input placeholder="e.g., Dr. Alan Turing | CST01" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                        <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.fromTime`} render={({ field }) => (<FormItem><FormLabel>From</FormLabel><FormControl><Input type="time" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                        <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.toTime`} render={({ field }) => (<FormItem><FormLabel>To</FormLabel><FormControl><Input type="time" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                        <FormField
+                                            control={control}
+                                            name={`classes.${classIndex}.lectures.${lectureIndex}.fromTime`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>From</FormLabel>
+                                                    <Select onValueChange={(value) => handleStartTimeChange(value, lectureIndex)} defaultValue={field.value}>
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Select start time" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {lectureStartTimes.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={control}
+                                            name={`classes.${classIndex}.lectures.${lectureIndex}.toTime`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>To</FormLabel>
+                                                    <FormControl><Input type="time" {...field} readOnly className="bg-muted/50"/></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
                                     </div>
                                     <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.students`} render={({ field }) => (<FormItem><FormLabel>Student List</FormLabel><FormControl><Textarea placeholder="Enter one student per line (Name + Enrollment No.)" {...field} className="min-h-[120px]"/></FormControl><FormMessage /></FormItem>)} />
                                     <div className="flex justify-end items-center gap-2">
