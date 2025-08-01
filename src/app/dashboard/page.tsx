@@ -229,14 +229,13 @@ export default function DashboardPage() {
     
     const handleGeneratePdf = (data: ODFormValues) => {
         const doc = new jsPDF();
+        let yPos = 45;
     
         // Add content to the PDF
         doc.setFontSize(20);
         doc.text("Amity University", 105, 20, { align: 'center' });
         doc.setFontSize(16);
         doc.text("On-Duty Application Form", 105, 30, { align: 'center' });
-    
-        let yPos = 45;
     
         // Faculty Coordinator Details
         doc.setFontSize(12);
@@ -278,7 +277,7 @@ export default function DashboardPage() {
         doc.text("Affected Classes & Lectures", 14, yPos);
         yPos += 7;
     
-        data.classes.forEach((classInfo, index) => {
+        data.classes.forEach((classInfo) => {
             const classHeader = `Class: ${classInfo.course} ${classInfo.program} - Semester ${classInfo.semester} (Section ${classInfo.section})`;
             doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
@@ -294,7 +293,25 @@ export default function DashboardPage() {
                 styles: { fontSize: 9 },
                 headStyles: { fillColor: [41, 128, 185] },
             });
-            yPos = (doc as any).lastAutoTable.finalY + 8;
+            yPos = (doc as any).lastAutoTable.finalY + 5;
+            
+            // Student List per Lecture
+            classInfo.lectures.forEach((lecture) => {
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.text(`Students for: ${lecture.subject} (${lecture.fromTime} - ${lecture.toTime})`, 14, yPos);
+                yPos += 5;
+                const studentList = lecture.students.split('\n').map(s => [s]);
+                (doc as any).autoTable({
+                    startY: yPos,
+                    head: [['Student Name & Enrollment No.']],
+                    body: studentList,
+                    theme: 'grid',
+                    styles: { fontSize: 8 },
+                    headStyles: { fillColor: [80, 80, 80] },
+                });
+                yPos = (doc as any).lastAutoTable.finalY + 8;
+            });
         });
     
         doc.save(`OD_Application_${data.eventName.replace(/ /g, '_')}.pdf`);
