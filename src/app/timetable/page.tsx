@@ -132,7 +132,9 @@ const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: 
             <Icon className="w-6 h-6 mr-3 text-primary" />
             <h2 className={cn("text-xl font-headline font-semibold text-foreground", titleClassName)}>{title}</h2>
         </div>
-        {children}
+        <div className="relative">
+            {children}
+        </div>
     </div>
 );
 
@@ -308,10 +310,22 @@ export default function TimetablePage() {
 
                     <SectionPanel title="Select Class" icon={Calendar}>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                             <Select onValueChange={(v) => handleSelectChange('course', v)} value={selectedClass.course}><SelectTrigger className="h-9 text-xs md:text-sm"><SelectValue placeholder="Course" /></SelectTrigger><SelectContent><SelectItem value="B.Tech">B.Tech</SelectItem><SelectItem value="BCA">BCA</SelectItem><SelectItem value="MCA">MCA</SelectItem></SelectContent></Select>
-                             <Select onValueChange={(v) => handleSelectChange('program', v)} value={selectedClass.program}><SelectTrigger className="h-9 text-xs md:text-sm"><SelectValue placeholder="Program" /></SelectTrigger><SelectContent><SelectItem value="CSE">Computer Science</SelectItem><SelectItem value="IT">Information Technology</SelectItem><SelectItem value="ECE">Electronics</SelectItem></SelectContent></Select>
-                             <Select onValueChange={(v) => handleSelectChange('semester', v)} value={selectedClass.semester}><SelectTrigger className="h-9 text-xs md:text-sm"><SelectValue placeholder="Semester" /></SelectTrigger><SelectContent>{Array.from({length: 8}, (_, i) => i + 1).map(sem => <SelectItem key={sem} value={String(sem)}>Semester {sem}</SelectItem>)}</SelectContent></Select>
-                             <Select onValueChange={(v) => handleSelectChange('section', v)} value={selectedClass.section}><SelectTrigger className="h-9 text-xs md:text-sm"><SelectValue placeholder="Section" /></SelectTrigger><SelectContent>{['A', 'B', 'C', 'D', 'E'].map(sec => <SelectItem key={sec} value={sec}>{sec}</SelectItem>)}</SelectContent></Select>
+                             <div className="space-y-1.5">
+                                 <label className="text-xs font-medium text-muted-foreground">Course</label>
+                                 <Select onValueChange={(v) => handleSelectChange('course', v)} value={selectedClass.course}><SelectTrigger className="h-9 text-xs md:text-sm"><SelectValue placeholder="Course" /></SelectTrigger><SelectContent><SelectItem value="B.Tech">B.Tech</SelectItem><SelectItem value="BCA">BCA</SelectItem><SelectItem value="MCA">MCA</SelectItem></SelectContent></Select>
+                             </div>
+                              <div className="space-y-1.5">
+                                 <label className="text-xs font-medium text-muted-foreground">Program</label>
+                                 <Select onValueChange={(v) => handleSelectChange('program', v)} value={selectedClass.program}><SelectTrigger className="h-9 text-xs md:text-sm"><SelectValue placeholder="Program" /></SelectTrigger><SelectContent><SelectItem value="CSE">Computer Science</SelectItem><SelectItem value="IT">Information Technology</SelectItem><SelectItem value="ECE">Electronics</SelectItem></SelectContent></Select>
+                             </div>
+                             <div className="space-y-1.5">
+                                <label className="text-xs font-medium text-muted-foreground">Semester</label>
+                                <Select onValueChange={(v) => handleSelectChange('semester', v)} value={selectedClass.semester}><SelectTrigger className="h-9 text-xs md:text-sm"><SelectValue placeholder="Semester" /></SelectTrigger><SelectContent>{Array.from({length: 8}, (_, i) => i + 1).map(sem => <SelectItem key={sem} value={String(sem)}>Semester {sem}</SelectItem>)}</SelectContent></Select>
+                             </div>
+                             <div className="space-y-1.5">
+                                <label className="text-xs font-medium text-muted-foreground">Section</label>
+                                <Select onValueChange={(v) => handleSelectChange('section', v)} value={selectedClass.section}><SelectTrigger className="h-9 text-xs md:text-sm"><SelectValue placeholder="Section" /></SelectTrigger><SelectContent>{['A', 'B', 'C', 'D', 'E'].map(sec => <SelectItem key={sec} value={sec}>{sec}</SelectItem>)}</SelectContent></Select>
+                             </div>
                         </div>
                     </SectionPanel>
 
@@ -321,10 +335,10 @@ export default function TimetablePage() {
                                 <table className="w-full border-collapse text-center min-w-[800px]">
                                     <thead>
                                         <tr className="bg-secondary/50">
-                                            <th className="p-2 border border-border sticky left-0 bg-secondary/50 z-10">Day</th>
+                                            <th className="p-2 border border-border sticky left-0 bg-secondary/50 z-10 text-xs">Day</th>
                                             {lectureTimings.map(t => (
-                                                <th key={t.id} className="p-2 border border-border text-xs md:text-sm">
-                                                    {t.id !== 'LUNCH' ? `Lec ${t.id.replace('L','')}` : ''} <br/> <span className="font-normal text-muted-foreground">{t.fromTime}-{t.toTime}</span>
+                                                <th key={t.id} className="p-2 border border-border text-xs">
+                                                    {t.id !== 'LUNCH' ? `Lec ${t.id.replace('L','')}` : ''} <br/> <span className="font-normal text-muted-foreground text-[10px]">{t.fromTime}-{t.toTime}</span>
                                                 </th>
                                             ))}
                                         </tr>
@@ -332,20 +346,20 @@ export default function TimetablePage() {
                                     <tbody>
                                         {daysOfWeek.map(day => (
                                             <tr key={day}>
-                                                <td className="p-2 border border-border font-semibold sticky left-0 bg-secondary/80 z-10">{day}</td>
+                                                <td className="p-1 border border-border font-semibold sticky left-0 bg-secondary/80 z-10 text-xs">{day}</td>
                                                 {timetable.schedule[day] && timetable.schedule[day].map(lecture => {
                                                      if (lecture.fromTime === '13:10') {
-                                                        return <td key={lecture.id} className="p-2 border border-border bg-muted/30 font-semibold text-muted-foreground align-middle text-xs">LUNCH</td>
+                                                        return <td key={lecture.id} className="p-1 border border-border bg-muted/30 font-semibold text-muted-foreground align-middle text-xs">LUNCH</td>
                                                      }
                                                      return (
-                                                        <td key={lecture.id} className="p-1 md:p-2 border border-border align-middle hover:bg-primary/10 cursor-pointer transition-colors" onClick={() => handleLectureClick(day, lecture.id)}>
+                                                        <td key={lecture.id} className="p-1 border border-border align-middle hover:bg-primary/10 cursor-pointer transition-colors" onClick={() => handleLectureClick(day, lecture.id)}>
                                                             {lecture.subjectCode || lecture.subjectName ? (
-                                                                <div className="text-xs md:text-sm font-semibold text-foreground">
+                                                                <div className="text-xs font-semibold text-foreground">
                                                                     {lecture.subjectCode || lecture.subjectName}
                                                                 </div>
                                                             ) : (
                                                                 <div className="flex items-center justify-center h-full min-h-[3rem]">
-                                                                    <PlusCircle className="w-5 h-5 text-muted-foreground/50"/>
+                                                                    <PlusCircle className="w-4 h-4 text-muted-foreground/50"/>
                                                                 </div>
                                                             )}
                                                         </td>
