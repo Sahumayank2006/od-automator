@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm, FormProvider } from 'react-hook-form';
 import * as z from 'zod';
 import React, { useEffect, useState } from 'react';
-import { format, addMinutes } from 'date-fns';
+import { format, addMinutes, getDay } from 'date-fns';
 import Link from 'next/link';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -25,7 +25,8 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, LogOut, GraduationCap, Copy, Zap } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, LogOut, GraduationCap, Copy, Zap, Table } from 'lucide-react';
+import type { TimetableData } from '@/app/timetable/page';
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -78,7 +79,74 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
     });
     const { toast } = useToast();
 
-    const lectureStartTimes = ["09:15", "10:15", "11:15", "13:15", "14:15", "15:15", "16:15"];
+    const lectureStartTimes = ["09:15", "10:15", "11:15", "12:15", "13:15", "14:15", "15:15", "16:15"];
+    
+    const timeToMinutes = (time: string) => {
+      const [hours, minutes] = time.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+    
+    const handleAutofill = () => {
+        const { course, program, semester, section } = form.getValues(`classes.${classIndex}`);
+        const { eventDate, eventFromTime, eventToTime } = form.getValues();
+        
+        if (!course || !program || !semester || !section) {
+            toast({ variant: 'destructive', title: "Missing Class Details", description: "Please select course, program, semester, and section." });
+            return;
+        }
+
+        if (!eventDate || !eventFromTime || !eventToTime) {
+            toast({ variant: 'destructive', title: "Missing Event Details", description: "Please provide the event date and time." });
+            return;
+        }
+
+        const storedTimetables = JSON.parse(localStorage.getItem('timetables') || '{}');
+        const timetableKey = `${course}-${program}-${semester}-${section}`;
+        const timetable: TimetableData = storedTimetables[timetableKey];
+
+        if (!timetable) {
+            toast({ variant: 'destructive', title: "No Timetable Found", description: "A timetable for this class and section has not been created yet." });
+            return;
+        }
+
+        const eventDayIndex = (getDay(eventDate) + 6) % 7; // Monday = 0, Sunday = 6
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const eventDayName = days[eventDayIndex];
+
+        const eventStartMinutes = timeToMinutes(eventFromTime);
+        const eventEndMinutes = timeToMinutes(eventToTime);
+
+        const daySchedule = timetable.schedule[eventDayName];
+        if (!daySchedule) return;
+
+        const conflictingLectures = daySchedule.filter(lecture => {
+            if (!lecture.fromTime || !lecture.toTime || !lecture.subjectName) return false;
+            const lectureStartMinutes = timeToMinutes(lecture.fromTime);
+            const lectureEndMinutes = timeToMinutes(lecture.toTime);
+            return Math.max(eventStartMinutes, lectureStartMinutes) < Math.min(eventEndMinutes, lectureEndMinutes);
+        });
+
+        if (conflictingLectures.length === 0) {
+            toast({ title: "No Conflicts", description: "No lectures conflict with the specified event time." });
+            return;
+        }
+
+        // Clear existing lectures before adding new ones
+        removeLecture(Array.from({length: lectureFields.length}, (_, i) => i));
+
+        conflictingLectures.forEach(lec => {
+            appendLecture({
+                id: crypto.randomUUID(),
+                subject: `${lec.subjectName} | ${lec.subjectCode}`,
+                faculty: `${lec.facultyName} | ${lec.facultyCode}`,
+                fromTime: lec.fromTime,
+                toTime: lec.toTime,
+                students: ''
+            }, { shouldFocus: false });
+        });
+
+        toast({ title: "Lectures Autofilled", description: `${conflictingLectures.length} conflicting lectures have been added.` });
+    };
 
     const handleStartTimeChange = (value: string, lectureIndex: number) => {
         form.setValue(`classes.${classIndex}.lectures.${lectureIndex}.fromTime`, value, { shouldValidate: true, shouldDirty: true });
@@ -131,7 +199,7 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
                             <Button type="button" size="sm" variant="ghost" onClick={() => appendLecture({ id: crypto.randomUUID(), subject: '', faculty: '', fromTime: '', toTime: '', students: ''})}><PlusCircle className="mr-2 h-4 w-4"/>Add Lecture</Button>
                         </div>
                     </div>
-                    <Button type="button" size="sm" className="mb-4"><Bot className="w-4 h-4 mr-2" />Autofill Conflicting Lectures</Button>
+                    <Button type="button" size="sm" className="mb-4" onClick={handleAutofill}><Bot className="w-4 h-4 mr-2" />Autofill Conflicting Lectures</Button>
                     <Accordion type="multiple" className="space-y-2">
                         {lectureFields.map((lectureField, lectureIndex) => (
                             <AccordionItem key={lectureField.id} value={lectureField.id} className="border bg-background/50 rounded-lg p-3">
@@ -174,7 +242,7 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
                                     </div>
                                     <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.students`} render={({ field }) => (<FormItem><FormLabel>Student List</FormLabel><FormControl><Textarea placeholder="Enter one student per line (Name + Enrollment No.)" {...field} className="min-h-[120px]"/></FormControl><FormMessage /></FormItem>)} />
                                     <div className="flex justify-end items-center gap-2">
-                                        <Button type="button" size="sm" variant="outline">Extract Students</Button>
+                                        
                                         {lectureFields.length > 1 && (
                                             <Button type="button" size="sm" variant="destructive" onClick={() => removeLecture(lectureIndex)}><Trash2 className="w-4 h-4"/></Button>
                                         )}
@@ -350,12 +418,20 @@ export default function DashboardPage() {
                             <GraduationCap className="w-8 h-8 text-primary" />
                             <h1 className="text-2xl font-headline font-bold text-foreground">OD Automator</h1>
                         </div>
-                        <Link href="/" passHref>
-                            <Button variant="ghost">
-                                <LogOut className="w-4 h-4 mr-2"/>
-                                Sign Out
-                            </Button>
-                        </Link>
+                        <div className="flex items-center gap-2">
+                            <Link href="/timetable" passHref>
+                                <Button variant="outline">
+                                    <Table className="w-4 h-4 mr-2"/>
+                                    Manage Timetable
+                                </Button>
+                            </Link>
+                            <Link href="/" passHref>
+                                <Button variant="ghost">
+                                    <LogOut className="w-4 h-4 mr-2"/>
+                                    Sign Out
+                                </Button>
+                            </Link>
+                        </div>
                     </header>
                     
                     <Form {...form}>
