@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { Home, Save, GraduationCap, Calendar, BookOpen, User, Tag, PlusCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -16,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Combobox } from '@/components/ui/combobox';
 
 
 const lectureFormSchema = z.object({
@@ -195,6 +195,28 @@ const LectureEditDialog = ({ open, onOpenChange, lecture, onSave }: { open: bool
     );
 };
 
+const courseOptions = [
+    { value: 'B.Tech', label: 'B.Tech' },
+    { value: 'BCA', label: 'BCA' },
+    { value: 'MCA', label: 'MCA' },
+];
+
+const programOptions = [
+    { value: 'IT', label: 'Information Technology' },
+    { value: 'CSE', label: 'Computer Science' },
+    { value: 'ECE', label: 'Electronics' },
+];
+
+const semesterOptions = Array.from({ length: 8 }, (_, i) => ({
+    value: String(i + 1),
+    label: `Semester ${i + 1}`,
+}));
+
+const sectionOptions = ['A', 'B', 'C', 'D', 'E'].map(sec => ({
+    value: sec,
+    label: sec
+}));
+
 
 export default function TimetablePage() {
     const { toast } = useToast();
@@ -312,19 +334,19 @@ export default function TimetablePage() {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                              <div className="space-y-1.5">
                                  <label className="text-xs font-medium text-muted-foreground">Course</label>
-                                 <Select onValueChange={(v) => handleSelectChange('course', v)} value={selectedClass.course}><SelectTrigger className="h-9 text-xs md:text-sm"><SelectValue placeholder="Course" /></SelectTrigger><SelectContent><SelectItem value="B.Tech">B.Tech</SelectItem><SelectItem value="BCA">BCA</SelectItem><SelectItem value="MCA">MCA</SelectItem></SelectContent></Select>
+                                 <Combobox options={courseOptions} value={selectedClass.course} onChange={(v) => handleSelectChange('course', v)} placeholder='Select course...' />
                              </div>
                               <div className="space-y-1.5">
                                  <label className="text-xs font-medium text-muted-foreground">Program</label>
-                                 <Select onValueChange={(v) => handleSelectChange('program', v)} value={selectedClass.program}><SelectTrigger className="h-9 text-xs md:text-sm"><SelectValue placeholder="Program" /></SelectTrigger><SelectContent><SelectItem value="CSE">Computer Science</SelectItem><SelectItem value="IT">Information Technology</SelectItem><SelectItem value="ECE">Electronics</SelectItem></SelectContent></Select>
+                                 <Combobox options={programOptions} value={selectedClass.program} onChange={(v) => handleSelectChange('program', v)} placeholder='Select program...' />
                              </div>
                              <div className="space-y-1.5">
                                 <label className="text-xs font-medium text-muted-foreground">Semester</label>
-                                <Select onValueChange={(v) => handleSelectChange('semester', v)} value={selectedClass.semester}><SelectTrigger className="h-9 text-xs md:text-sm"><SelectValue placeholder="Semester" /></SelectTrigger><SelectContent>{Array.from({length: 8}, (_, i) => i + 1).map(sem => <SelectItem key={sem} value={String(sem)}>Semester {sem}</SelectItem>)}</SelectContent></Select>
+                                <Combobox options={semesterOptions} value={selectedClass.semester} onChange={(v) => handleSelectChange('semester', v)} placeholder='Select semester...' />
                              </div>
                              <div className="space-y-1.5">
                                 <label className="text-xs font-medium text-muted-foreground">Section</label>
-                                <Select onValueChange={(v) => handleSelectChange('section', v)} value={selectedClass.section}><SelectTrigger className="h-9 text-xs md:text-sm"><SelectValue placeholder="Section" /></SelectTrigger><SelectContent>{['A', 'B', 'C', 'D', 'E'].map(sec => <SelectItem key={sec} value={sec}>{sec}</SelectItem>)}</SelectContent></Select>
+                                <Combobox options={sectionOptions} value={selectedClass.section} onChange={(v) => handleSelectChange('section', v)} placeholder='Select section...' />
                              </div>
                         </div>
                     </SectionPanel>
@@ -335,9 +357,9 @@ export default function TimetablePage() {
                                 <table className="w-full border-collapse text-center min-w-[800px]">
                                     <thead>
                                         <tr className="bg-secondary/50">
-                                            <th className="p-2 border border-border sticky left-0 bg-secondary/50 z-10 text-xs">Day</th>
+                                            <th className="p-1 border border-border sticky left-0 bg-secondary/50 z-10 text-xs">Day</th>
                                             {lectureTimings.map(t => (
-                                                <th key={t.id} className="p-2 border border-border text-xs">
+                                                <th key={t.id} className="p-1 border border-border text-xs">
                                                     {t.id !== 'LUNCH' ? `Lec ${t.id.replace('L','')}` : ''} <br/> <span className="font-normal text-muted-foreground text-[10px]">{t.fromTime}-{t.toTime}</span>
                                                 </th>
                                             ))}
@@ -354,7 +376,7 @@ export default function TimetablePage() {
                                                      return (
                                                         <td key={lecture.id} className="p-1 border border-border align-middle hover:bg-primary/10 cursor-pointer transition-colors" onClick={() => handleLectureClick(day, lecture.id)}>
                                                             {lecture.subjectCode || lecture.subjectName ? (
-                                                                <div className="text-xs font-semibold text-foreground">
+                                                                <div className="text-[10px] font-semibold text-foreground">
                                                                     {lecture.subjectCode || lecture.subjectName}
                                                                 </div>
                                                             ) : (

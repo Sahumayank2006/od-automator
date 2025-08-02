@@ -21,6 +21,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Combobox } from '@/components/ui/combobox';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -71,6 +72,23 @@ const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: 
         </div>
     </div>
 );
+
+const courseOptions = [
+    { value: 'B.Tech', label: 'B.Tech' },
+    { value: 'BCA', label: 'BCA' },
+    { value: 'MCA', label: 'MCA' },
+];
+
+const programOptions = [
+    { value: 'IT', label: 'Information Technology' },
+    { value: 'CSE', label: 'Computer Science' },
+    { value: 'ECE', label: 'Electronics' },
+];
+
+const semesterOptions = Array.from({ length: 8 }, (_, i) => ({
+    value: String(i + 1),
+    label: `Semester ${i + 1}`,
+}));
 
 const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form }: { classField: any, classIndex: number, removeClass: (index: number) => void, control: any, form: any }) => {
     const { fields: lectureFields, append: appendLecture, remove: removeLecture } = useFieldArray({
@@ -183,9 +201,9 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
             </AccordionTrigger>
             <AccordionContent className="pt-4 space-y-6">
                 <div className="grid md:grid-cols-3 gap-6">
-                    <FormField control={control} name={`classes.${classIndex}.course`} render={({ field }) => (<FormItem><FormLabel>Course Name</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="e.g., B.Tech" /></SelectTrigger></FormControl><SelectContent><SelectItem value="B.Tech">B.Tech</SelectItem><SelectItem value="BCA">BCA</SelectItem><SelectItem value="MCA">MCA</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
-                    <FormField control={control} name={`classes.${classIndex}.program`} render={({ field }) => (<FormItem><FormLabel>Program</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="e.g., Information Technology" /></SelectTrigger></FormControl><SelectContent><SelectItem value="IT">Information Technology</SelectItem><SelectItem value="CSE">Computer Science</SelectItem><SelectItem value="ECE">Electronics</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
-                    <FormField control={control} name={`classes.${classIndex}.semester`} render={({ field }) => (<FormItem><FormLabel>Semester</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="e.g., Semester 4" /></SelectTrigger></FormControl><SelectContent>{Array.from({length: 8}, (_, i) => i + 1).map(sem => <SelectItem key={sem} value={String(sem)}>Semester {sem}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
+                    <FormField control={control} name={`classes.${classIndex}.course`} render={({ field }) => (<FormItem><FormLabel>Course Name</FormLabel><Combobox options={courseOptions} {...field} placeholder="Select course..." /><FormMessage /></FormItem>)} />
+                    <FormField control={control} name={`classes.${classIndex}.program`} render={({ field }) => (<FormItem><FormLabel>Program</FormLabel><Combobox options={programOptions} {...field} placeholder="Select program..." /><FormMessage /></FormItem>)} />
+                    <FormField control={control} name={`classes.${classIndex}.semester`} render={({ field }) => (<FormItem><FormLabel>Semester</FormLabel><Combobox options={semesterOptions} {...field} placeholder="Select semester..." /><FormMessage /></FormItem>)} />
                 </div>
                 <FormField control={control} name={`classes.${classIndex}.section`} render={({ field }) => (<FormItem><FormLabel>Section</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-4 pt-2">{['A', 'B', 'C', 'D', 'E'].map(sec => <FormItem key={sec} className="flex items-center space-x-2"><FormControl><RadioGroupItem value={sec} /></FormControl><FormLabel className="font-normal">{sec}</FormLabel></FormItem>)}</RadioGroup></FormControl><FormMessage /></FormItem>)} />
                 
