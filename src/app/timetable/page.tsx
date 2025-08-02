@@ -126,7 +126,7 @@ const generateInitialSchedule = (): Record<string, Lecture[]> => {
 
 
 const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: string; icon: React.ElementType, children: React.ReactNode, titleClassName?: string }) => (
-    <div className="glass-panel p-6 md:p-8 relative overflow-hidden group">
+    <div className="glass-panel p-6 md:p-8 relative group">
         <div className="absolute -inset-px bg-gradient-to-r from-primary/50 to-accent/50 rounded-2xl blur-lg opacity-25 group-hover:opacity-50 transition-opacity duration-500"></div>
         <div className="relative flex items-center mb-6">
             <Icon className="w-6 h-6 mr-3 text-primary" />
