@@ -132,9 +132,7 @@ const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: 
             <Icon className="w-6 h-6 mr-3 text-primary" />
             <h2 className={cn("text-xl font-headline font-semibold text-foreground", titleClassName)}>{title}</h2>
         </div>
-        <div className="relative">
-            {children}
-        </div>
+        {children}
     </div>
 );
 
