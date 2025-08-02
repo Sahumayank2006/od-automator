@@ -70,18 +70,18 @@ const btechCse3A_Timetable: TimetableData = {
             { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'Data Structures Through C++', subjectCode: 'CSE 202', facultyName: 'Mr. Gaurav Kumar', facultyCode: '' },
             { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
             { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'Behavioural Science - III', subjectCode: 'BSU 343', facultyName: 'Dr. Jangjeet', facultyCode: '' },
-            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'CSE Specialization', subjectCode: '', facultyName: '', facultyCode: '' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'CSE Specialization', subjectCode: 'CSE Spec.', facultyName: '', facultyCode: '' },
             { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'Database Management Systems', subjectCode: 'CSE 304', facultyName: 'Ms. Nishtha Paras', facultyCode: '' },
         ],
         Tuesday: [
-            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'CSE Specialization', subjectCode: '', facultyName: '', facultyCode: '' },
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'CSE Specialization', subjectCode: 'CSE Spec.', facultyName: '', facultyCode: '' },
             { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'Python Programming Lab', subjectCode: 'CSE 322', facultyName: 'Arunima Shivhare', facultyCode: '' },
             { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'DBMS Lab', subjectCode: 'CSE 324', facultyName: 'Jeetendra Singh Bh', facultyCode: '' },
             { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'French - III', subjectCode: 'FLU 344', facultyName: 'Dr. Suketu Revar', facultyCode: '' },
             { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
             { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'DBMS Lab', subjectCode: 'CSE 324', facultyName: 'Jeetendra Singh Bh', facultyCode: '' },
             { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'Data Structures through C++ Lab', subjectCode: 'CSE 222', facultyName: 'Dr. Giriraj Kumar', facultyCode: '' },
-            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'LIBRARY/CCA', subjectCode: '', facultyName: '', facultyCode: '' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'LIBRARY/CCA', subjectCode: 'LIBRARY', facultyName: '', facultyCode: '' },
         ],
         Wednesday: [
             { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'Digital Electronics and Logic Design Lab', subjectCode: 'ECE 326', facultyName: 'Ms. Rashmi Tikar', facultyCode: '' },
@@ -90,12 +90,12 @@ const btechCse3A_Timetable: TimetableData = {
             { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'Python Programming', subjectCode: 'CSE302', facultyName: 'Dr. Ghanshyam P', facultyCode: '' },
             { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
             { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'Communication Skills - III', subjectCode: 'BSU 341', facultyName: 'Dr. Archana Sharn', facultyCode: '' },
-            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'CSE Specialization', subjectCode: '', facultyName: '', facultyCode: '' },
-            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'LIBRARY/CCA', subjectCode: '', facultyName: '', facultyCode: '' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'CSE Specialization', subjectCode: 'CSE Spec.', facultyName: '', facultyCode: '' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'LIBRARY/CCA', subjectCode: 'LIBRARY', facultyName: '', facultyCode: '' },
         ],
         Thursday: [
-            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'CSE Specialization', subjectCode: '', facultyName: '', facultyCode: '' },
-            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'CSE Specialization', subjectCode: '', facultyName: '', facultyCode: '' },
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'CSE Specialization', subjectCode: 'CSE Spec.', facultyName: '', facultyCode: '' },
+            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'CSE Specialization', subjectCode: 'CSE Spec.', facultyName: '', facultyCode: '' },
             { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'Data Structures Through C++', subjectCode: 'CSE 202', facultyName: 'Mr. Gaurav Kumar', facultyCode: '' },
             { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'Digital Electronics and Logic Design', subjectCode: 'ECE 306', facultyName: 'Ms. Rashmi Tikar', facultyCode: '' },
             { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
@@ -111,7 +111,7 @@ const btechCse3A_Timetable: TimetableData = {
             { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
             { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'Data Structures through C++ Lab', subjectCode: 'CSE 222', facultyName: 'Mr. Gaurav Kumar', facultyCode: '' },
             { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'Digital Electronics and Logic Design Lab', subjectCode: 'ECE 326', facultyName: 'Ms. Rashmi Tikar', facultyCode: '' },
-            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'LIBRARY/CCA', subjectCode: '', facultyName: '', facultyCode: '' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'LIBRARY/CCA', subjectCode: 'LIBRARY', facultyName: '', facultyCode: '' },
         ],
     },
 };
@@ -318,13 +318,13 @@ export default function TimetablePage() {
                     {timetable ? (
                         <SectionPanel title="Weekly Schedule" icon={BookOpen}>
                             <div className="overflow-x-auto">
-                                <table className="w-full border-collapse text-center min-w-[1200px]">
+                                <table className="w-full border-collapse text-center min-w-[800px]">
                                     <thead>
                                         <tr className="bg-secondary/50">
                                             <th className="p-2 border border-border sticky left-0 bg-secondary/50 z-10">Day</th>
                                             {lectureTimings.map(t => (
                                                 <th key={t.id} className="p-2 border border-border text-xs md:text-sm">
-                                                    Lec {t.id.replace('L','')} <br/> <span className="font-normal text-muted-foreground">{t.fromTime}-{t.toTime}</span>
+                                                    {t.id !== 'LUNCH' ? `Lec ${t.id.replace('L','')}` : ''} <br/> <span className="font-normal text-muted-foreground">{t.fromTime}-{t.toTime}</span>
                                                 </th>
                                             ))}
                                         </tr>
@@ -335,19 +335,16 @@ export default function TimetablePage() {
                                                 <td className="p-2 border border-border font-semibold sticky left-0 bg-secondary/80 z-10">{day}</td>
                                                 {timetable.schedule[day] && timetable.schedule[day].map(lecture => {
                                                      if (lecture.fromTime === '13:10') {
-                                                        return <td key={lecture.id} className="p-2 border border-border bg-muted/30 font-semibold text-muted-foreground align-middle">LUNCH</td>
+                                                        return <td key={lecture.id} className="p-2 border border-border bg-muted/30 font-semibold text-muted-foreground align-middle text-xs">LUNCH</td>
                                                      }
                                                      return (
-                                                        <td key={lecture.id} className="p-1 md:p-2 border border-border align-top h-28 hover:bg-primary/10 cursor-pointer transition-colors" onClick={() => handleLectureClick(day, lecture.id)}>
-                                                            {lecture.subjectName ? (
-                                                                <div className="text-xs md:text-sm text-left">
-                                                                    <p className="font-bold text-foreground">{lecture.subjectName}</p>
-                                                                    <p className="text-muted-foreground">{lecture.subjectCode}</p>
-                                                                    <p className="text-foreground mt-1">{lecture.facultyName}</p>
-                                                                    <p className="text-muted-foreground">{lecture.facultyCode}</p>
+                                                        <td key={lecture.id} className="p-1 md:p-2 border border-border align-middle hover:bg-primary/10 cursor-pointer transition-colors" onClick={() => handleLectureClick(day, lecture.id)}>
+                                                            {lecture.subjectCode || lecture.subjectName ? (
+                                                                <div className="text-xs md:text-sm font-semibold text-foreground">
+                                                                    {lecture.subjectCode || lecture.subjectName}
                                                                 </div>
                                                             ) : (
-                                                                <div className="flex items-center justify-center h-full">
+                                                                <div className="flex items-center justify-center h-full min-h-[3rem]">
                                                                     <PlusCircle className="w-5 h-5 text-muted-foreground/50"/>
                                                                 </div>
                                                             )}
@@ -378,3 +375,5 @@ export default function TimetablePage() {
         </>
     );
 }
+
+    
