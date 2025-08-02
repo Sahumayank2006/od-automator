@@ -100,6 +100,7 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
     const lectureStartTimes = ["09:15", "10:15", "11:15", "12:15", "13:15", "14:15", "15:15", "16:15"];
     
     const timeToMinutes = (time: string) => {
+      if (!time || !time.includes(':')) return 0;
       const [hours, minutes] = time.split(':').map(Number);
       return hours * 60 + minutes;
     };
@@ -139,13 +140,20 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
 
         const conflictingLectures = daySchedule.filter(lecture => {
             if (!lecture.fromTime || !lecture.toTime || !lecture.subjectName) return false;
+            
             const lectureStartMinutes = timeToMinutes(lecture.fromTime);
             const lectureEndMinutes = timeToMinutes(lecture.toTime);
-            return Math.max(eventStartMinutes, lectureStartMinutes) < Math.min(eventEndMinutes, lectureEndMinutes);
+            
+            const overlapStart = Math.max(eventStartMinutes, lectureStartMinutes);
+            const overlapEnd = Math.min(eventEndMinutes, lectureEndMinutes);
+
+            const overlapDuration = Math.max(0, overlapEnd - overlapStart);
+            
+            return overlapDuration > 15;
         });
 
         if (conflictingLectures.length === 0) {
-            toast({ title: "No Conflicts", description: "No lectures conflict with the specified event time." });
+            toast({ title: "No Conflicts", description: "No lectures conflict with the specified event time for more than 15 minutes." });
             return;
         }
 
@@ -156,7 +164,7 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
             appendLecture({
                 id: crypto.randomUUID(),
                 subject: `${lec.subjectName} | ${lec.subjectCode}`,
-                faculty: `${lec.facultyName} | ${lec.facultyCode}`,
+                faculty: `${lec.facultyName}${lec.facultyCode ? ` | ${lec.facultyCode}` : ''}`,
                 fromTime: lec.fromTime,
                 toTime: lec.toTime,
                 students: ''
@@ -285,10 +293,13 @@ export default function DashboardPage() {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            toast({
-                title: "Timetables Loaded",
-                description: "Your saved timetables have been loaded from local storage.",
-            });
+            const timetables = localStorage.getItem('timetables');
+            if (timetables && Object.keys(JSON.parse(timetables)).length > 0) {
+              toast({
+                  title: "Timetables Loaded",
+                  description: "Your saved timetables have been loaded from local storage.",
+              });
+            }
         }, 1000);
         return () => clearTimeout(timer);
     }, [toast]);
