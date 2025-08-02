@@ -205,9 +205,15 @@ export default function TimetablePage() {
     });
 
     useEffect(() => {
-        const storedTimetables = JSON.parse(localStorage.getItem('timetables') || '{}');
-        const mergedTimetables = {...allTimetables, ...storedTimetables};
-        setAllTimetables(mergedTimetables);
+        try {
+            const storedTimetables = JSON.parse(localStorage.getItem('timetables') || '{}');
+            if (Object.keys(storedTimetables).length > 0) {
+                 const mergedTimetables = {...allTimetables, ...storedTimetables};
+                 setAllTimetables(mergedTimetables);
+            }
+        } catch(e) {
+            console.error("Could not parse timetables from local storage", e);
+        }
          // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -255,7 +261,7 @@ export default function TimetablePage() {
             };
             updatedSchedule[day] = daySchedule;
             setTimetable({ ...timetable, schedule: updatedSchedule });
-            toast({ title: "Lecture Updated", description: "The lecture details have been saved locally." });
+            toast({ title: "Lecture Updated", description: "The lecture details have been saved locally. Click 'Save Timetable' to persist." });
         }
     };
     
@@ -315,7 +321,7 @@ export default function TimetablePage() {
                                 <table className="w-full border-collapse text-center min-w-[1200px]">
                                     <thead>
                                         <tr className="bg-secondary/50">
-                                            <th className="p-2 border border-border">Day</th>
+                                            <th className="p-2 border border-border sticky left-0 bg-secondary/50 z-10">Day</th>
                                             {lectureTimings.map(t => (
                                                 <th key={t.id} className="p-2 border border-border text-xs md:text-sm">
                                                     Lec {t.id.replace('L','')} <br/> <span className="font-normal text-muted-foreground">{t.fromTime}-{t.toTime}</span>
@@ -326,9 +332,9 @@ export default function TimetablePage() {
                                     <tbody>
                                         {daysOfWeek.map(day => (
                                             <tr key={day}>
-                                                <td className="p-2 border border-border font-semibold">{day}</td>
-                                                {timetable.schedule[day].map(lecture => {
-                                                     if (lecture.id === 'LUNCH') {
+                                                <td className="p-2 border border-border font-semibold sticky left-0 bg-secondary/80 z-10">{day}</td>
+                                                {timetable.schedule[day] && timetable.schedule[day].map(lecture => {
+                                                     if (lecture.fromTime === '13:10') {
                                                         return <td key={lecture.id} className="p-2 border border-border bg-muted/30 font-semibold text-muted-foreground align-middle">LUNCH</td>
                                                      }
                                                      return (
