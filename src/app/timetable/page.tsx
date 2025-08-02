@@ -22,7 +22,7 @@ const lectureFormSchema = z.object({
   subjectName: z.string().min(1, 'Subject name is required.'),
   subjectCode: z.string().min(1, 'Subject code is required.'),
   facultyName: z.string().min(1, 'Faculty name is required.'),
-  facultyCode: z.string().min(1, 'Faculty code is required.'),
+  facultyCode: z.string().optional(),
 });
 
 type LectureFormValues = z.infer<typeof lectureFormSchema>;
@@ -56,6 +56,65 @@ const lectureTimings = [
     { id: 'L6', fromTime: '15:15', toTime: '16:10' },
     { id: 'L7', fromTime: '16:15', toTime: '17:10' },
 ];
+
+const btechCse3A_Timetable: TimetableData = {
+    course: 'B.Tech',
+    program: 'CSE',
+    semester: '3',
+    section: 'A',
+    schedule: {
+        Monday: [
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'Python Programming', subjectCode: 'CSE302', facultyName: 'Dr. Ghanshyam P', facultyCode: '' },
+            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'Applied Mathematics - III', subjectCode: 'MAT 301', facultyName: 'Dr. Giriraj Kumar', facultyCode: '' },
+            { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'Digital Electronics and Logic Design', subjectCode: 'ECE 306', facultyName: 'Ms. Rashmi Tikar', facultyCode: '' },
+            { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'Data Structures Through C++', subjectCode: 'CSE 202', facultyName: 'Mr. Gaurav Kumar', facultyCode: '' },
+            { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
+            { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'Behavioural Science - III', subjectCode: 'BSU 343', facultyName: 'Dr. Jangjeet', facultyCode: '' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'CSE Specialization', subjectCode: '', facultyName: '', facultyCode: '' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'Database Management Systems', subjectCode: 'CSE 304', facultyName: 'Ms. Nishtha Paras', facultyCode: '' },
+        ],
+        Tuesday: [
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'CSE Specialization', subjectCode: '', facultyName: '', facultyCode: '' },
+            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'Python Programming Lab', subjectCode: 'CSE 322', facultyName: 'Arunima Shivhare', facultyCode: '' },
+            { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'DBMS Lab', subjectCode: 'CSE 324', facultyName: 'Jeetendra Singh Bh', facultyCode: '' },
+            { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'French - III', subjectCode: 'FLU 344', facultyName: 'Dr. Suketu Revar', facultyCode: '' },
+            { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
+            { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'DBMS Lab', subjectCode: 'CSE 324', facultyName: 'Jeetendra Singh Bh', facultyCode: '' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'Data Structures through C++ Lab', subjectCode: 'CSE 222', facultyName: 'Dr. Giriraj Kumar', facultyCode: '' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'LIBRARY/CCA', subjectCode: '', facultyName: '', facultyCode: '' },
+        ],
+        Wednesday: [
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'Digital Electronics and Logic Design Lab', subjectCode: 'ECE 326', facultyName: 'Ms. Rashmi Tikar', facultyCode: '' },
+            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'Python Programming Lab', subjectCode: 'CSE 322', facultyName: 'Arunima Shivhare', facultyCode: '' },
+            { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'Database Management Systems', subjectCode: 'CSE 304', facultyName: 'Ms. Nishtha Paras', facultyCode: '' },
+            { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'Python Programming', subjectCode: 'CSE302', facultyName: 'Dr. Ghanshyam P', facultyCode: '' },
+            { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
+            { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'Communication Skills - III', subjectCode: 'BSU 341', facultyName: 'Dr. Archana Sharn', facultyCode: '' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'CSE Specialization', subjectCode: '', facultyName: '', facultyCode: '' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'LIBRARY/CCA', subjectCode: '', facultyName: '', facultyCode: '' },
+        ],
+        Thursday: [
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'CSE Specialization', subjectCode: '', facultyName: '', facultyCode: '' },
+            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'CSE Specialization', subjectCode: '', facultyName: '', facultyCode: '' },
+            { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'Data Structures Through C++', subjectCode: 'CSE 202', facultyName: 'Mr. Gaurav Kumar', facultyCode: '' },
+            { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'Digital Electronics and Logic Design', subjectCode: 'ECE 306', facultyName: 'Ms. Rashmi Tikar', facultyCode: '' },
+            { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
+            { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'Communication Skills - III', subjectCode: 'BSU 341', facultyName: 'Dr. Archana Sharn', facultyCode: '' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'Python Programming', subjectCode: 'CSE302', facultyName: 'Dr. Ghanshyam P', facultyCode: '' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'Applied Mathematics - III', subjectCode: 'MAT 301', facultyName: 'Dr. Giriraj Kumar', facultyCode: '' },
+        ],
+        Friday: [
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'Applied Mathematics - III', subjectCode: 'MAT 301', facultyName: 'Dr. Giriraj Kumar', facultyCode: '' },
+            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'Database Management Systems', subjectCode: 'CSE 304', facultyName: 'Ms. Nishtha Paras', facultyCode: '' },
+            { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'Data Structures Through C++', subjectCode: 'CSE 202', facultyName: 'Mr. Gaurav Kumar', facultyCode: '' },
+            { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'Digital Electronics and Logic Design', subjectCode: 'ECE 306', facultyName: 'Ms. Rashmi Tikar', facultyCode: '' },
+            { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
+            { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'Data Structures through C++ Lab', subjectCode: 'CSE 222', facultyName: 'Mr. Gaurav Kumar', facultyCode: '' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'Digital Electronics and Logic Design Lab', subjectCode: 'ECE 326', facultyName: 'Ms. Rashmi Tikar', facultyCode: '' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'LIBRARY/CCA', subjectCode: '', facultyName: '', facultyCode: '' },
+        ],
+    },
+};
 
 const generateInitialSchedule = (): Record<string, Lecture[]> => {
     const schedule: Record<string, Lecture[]> = {};
@@ -124,7 +183,7 @@ const LectureEditDialog = ({ open, onOpenChange, lecture, onSave }: { open: bool
                             <FormItem><FormLabel><User className="w-4 h-4 mr-2 inline"/>Faculty Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                         <FormField control={form.control} name="facultyCode" render={({ field }) => (
-                            <FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Faculty Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Faculty Code</FormLabel><FormControl><Input {...field} placeholder="e.g. F001 (Optional)"/></FormControl><FormMessage /></FormItem>
                         )} />
                         <div className="flex justify-end pt-4">
                             <Button type="submit"><Save className="w-4 h-4 mr-2"/> Save Changes</Button>
@@ -139,15 +198,19 @@ const LectureEditDialog = ({ open, onOpenChange, lecture, onSave }: { open: bool
 
 export default function TimetablePage() {
     const { toast } = useToast();
-    const [selectedClass, setSelectedClass] = useState({ course: '', program: '', semester: '', section: '' });
+    const [selectedClass, setSelectedClass] = useState({ course: 'B.Tech', program: 'CSE', semester: '3', section: 'A' });
     const [timetable, setTimetable] = useState<TimetableData | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedLecture, setSelectedLecture] = useState<{ day: string, lectureId: string } | null>(null);
-    const [allTimetables, setAllTimetables] = useState<Record<string, TimetableData>>({});
+    const [allTimetables, setAllTimetables] = useState<Record<string, TimetableData>>({
+        'B.Tech-CSE-3-A': btechCse3A_Timetable
+    });
 
     useEffect(() => {
         const storedTimetables = JSON.parse(localStorage.getItem('timetables') || '{}');
-        setAllTimetables(storedTimetables);
+        const mergedTimetables = {...allTimetables, ...storedTimetables};
+        setAllTimetables(mergedTimetables);
+         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const loadTimetable = useCallback(() => {
@@ -242,7 +305,7 @@ export default function TimetablePage() {
                     <SectionPanel title="Select Class" icon={Calendar}>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                              <Select onValueChange={(v) => handleSelectChange('course', v)} value={selectedClass.course}><SelectTrigger><SelectValue placeholder="Course" /></SelectTrigger><SelectContent><SelectItem value="B.Tech">B.Tech</SelectItem><SelectItem value="BCA">BCA</SelectItem><SelectItem value="MCA">MCA</SelectItem></SelectContent></Select>
-                             <Select onValueChange={(v) => handleSelectChange('program', v)} value={selectedClass.program}><SelectTrigger><SelectValue placeholder="Program" /></SelectTrigger><SelectContent><SelectItem value="IT">Information Technology</SelectItem><SelectItem value="CSE">Computer Science</SelectItem><SelectItem value="ECE">Electronics</SelectItem></SelectContent></Select>
+                             <Select onValueChange={(v) => handleSelectChange('program', v)} value={selectedClass.program}><SelectTrigger><SelectValue placeholder="Program" /></SelectTrigger><SelectContent><SelectItem value="CSE">Computer Science</SelectItem><SelectItem value="IT">Information Technology</SelectItem><SelectItem value="ECE">Electronics</SelectItem></SelectContent></Select>
                              <Select onValueChange={(v) => handleSelectChange('semester', v)} value={selectedClass.semester}><SelectTrigger><SelectValue placeholder="Semester" /></SelectTrigger><SelectContent>{Array.from({length: 8}, (_, i) => i + 1).map(sem => <SelectItem key={sem} value={String(sem)}>Semester {sem}</SelectItem>)}</SelectContent></Select>
                              <Select onValueChange={(v) => handleSelectChange('section', v)} value={selectedClass.section}><SelectTrigger><SelectValue placeholder="Section" /></SelectTrigger><SelectContent>{['A', 'B', 'C', 'D', 'E'].map(sec => <SelectItem key={sec} value={sec}>{sec}</SelectItem>)}</SelectContent></Select>
                         </div>
@@ -311,4 +374,3 @@ export default function TimetablePage() {
         </>
     );
 }
-
