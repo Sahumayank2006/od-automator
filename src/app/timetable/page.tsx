@@ -119,7 +119,7 @@ const btechCse3A_Timetable: TimetableData = {
 const generateInitialSchedule = (): Record<string, Lecture[]> => {
     const schedule: Record<string, Lecture[]> = {};
     daysOfWeek.forEach(day => {
-        schedule[day] = lectureTimings.map(timing => ({ ...timing }));
+        schedule[day] = lectureTimings.map(timing => ({ ...timing, id: `${day}-${timing.id}` }));
     });
     return schedule;
 };
@@ -283,13 +283,13 @@ export default function TimetablePage() {
     return (
         <>
             <ScrollArea className="h-screen bg-background">
-                <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-8">
-                     <header className="flex items-center justify-between py-4">
+                <div className="w-full max-w-7xl mx-auto space-y-8 p-4 md:p-8">
+                     <header className="flex flex-wrap items-center justify-between gap-4 py-4">
                         <div className="flex items-center gap-3">
                             <GraduationCap className="w-8 h-8 text-primary" />
                             <h1 className="text-2xl font-headline font-bold text-foreground">Timetable Manager</h1>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                             <Button onClick={handleSaveTimetable}><Save className="mr-2 h-4 w-4"/>Save Timetable</Button>
                             <Link href="/dashboard" passHref>
                                 <Button variant="ghost">
@@ -312,7 +312,7 @@ export default function TimetablePage() {
                     {timetable ? (
                         <SectionPanel title="Weekly Schedule" icon={BookOpen}>
                             <div className="overflow-x-auto">
-                                <table className="w-full border-collapse text-center">
+                                <table className="w-full border-collapse text-center min-w-[1200px]">
                                     <thead>
                                         <tr className="bg-secondary/50">
                                             <th className="p-2 border border-border">Day</th>
