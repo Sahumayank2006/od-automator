@@ -246,12 +246,13 @@ const generateInitialSchedule = (): Record<string, Lecture[]> => {
 
 const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: string; icon: React.ElementType, children: React.ReactNode, titleClassName?: string }) => (
     <div className="glass-panel p-6 md:p-8">
-        <div className="absolute -inset-px bg-gradient-to-r from-primary/50 to-accent/50 rounded-2xl blur-lg opacity-25 group-hover:opacity-50 transition-opacity duration-500"></div>
-        <div className="relative flex items-center mb-6">
+        <div className="flex items-center mb-6">
             <Icon className="w-6 h-6 mr-3 text-primary" />
             <h2 className={cn("text-xl font-headline font-semibold text-foreground", titleClassName)}>{title}</h2>
         </div>
-        {children}
+        <div className="relative">
+            {children}
+        </div>
     </div>
 );
 
@@ -434,7 +435,7 @@ export default function TimetablePage() {
     return (
         <>
             <ScrollArea className="h-screen bg-background">
-                <div className="w-full max-w-7xl mx-auto space-y-8 p-4 md:p-8">
+                <div className="container mx-auto space-y-8 p-4 md:p-8">
                      <header className="flex flex-wrap items-center justify-between gap-4 py-4">
                         <div className="flex items-center gap-3">
                             <GraduationCap className="w-8 h-8 text-primary" />
@@ -452,7 +453,7 @@ export default function TimetablePage() {
                     </header>
 
                     <SectionPanel title="Select Class" icon={Calendar}>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                              <div className="space-y-1.5">
                                  <label className="text-xs font-medium text-muted-foreground">Course</label>
                                  <Combobox options={courseOptions} value={selectedClass.course} onChange={(v) => handleSelectChange('course', v)} placeholder='Select course...' />
@@ -474,7 +475,7 @@ export default function TimetablePage() {
 
                     {timetable ? (
                         <div className="glass-panel p-6 md:p-8">
-                             <div className="relative flex items-center mb-6">
+                             <div className="flex items-center mb-6">
                                 <BookOpen className="w-6 h-6 mr-3 text-primary" />
                                 <h2 className={cn("text-xl font-headline font-semibold text-foreground")}>Weekly Schedule</h2>
                             </div>
