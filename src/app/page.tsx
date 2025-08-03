@@ -24,8 +24,8 @@ export default function AuthPage() {
   const [isInvalid, setIsInvalid] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   
-  const correctUserId = 'admin';
-  const correctPassword = 'password';
+  const correctUserId = process.env.NEXT_PUBLIC_ADMIN_USER_ID || 'admin';
+  const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'password';
 
   const handleInputChange = (id: string, pass: string) => {
     setUserId(id);
