@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,10 +21,33 @@ export default function AuthPage() {
   const { toast } = useToast();
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
+  const [isInvalid, setIsInvalid] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  
+  const correctUserId = 'admin';
+  const correctPassword = 'password';
+
+  const handleInputChange = (id: string, pass: string) => {
+    setUserId(id);
+    setPassword(pass);
+
+    const isUserIdIncorrect = id.length > 0 && correctUserId.indexOf(id) !== 0;
+    const isPasswordIncorrect = pass.length > 0 && correctPassword.indexOf(pass) !== 0;
+
+    if (id.length > correctUserId.length || pass.length > correctPassword.length || isUserIdIncorrect || isPasswordIncorrect) {
+      setIsInvalid(true);
+      setPosition({
+        x: Math.random() * 150 - 75,
+        y: Math.random() * 50 - 25
+      });
+    } else {
+      setIsInvalid(false);
+      setPosition({ x: 0, y: 0 });
+    }
+  };
 
   const handleSignIn = () => {
-    // Hardcoded credentials for demonstration
-    if (userId === 'admin' && password === 'password') {
+    if (userId === correctUserId && password === correctPassword) {
       toast({
         title: 'Sign In Successful',
         description: 'Welcome to OD Automator!',
@@ -36,12 +59,15 @@ export default function AuthPage() {
         title: 'Sign In Failed',
         description: 'Invalid User ID or Password.',
       });
+      setIsInvalid(true);
     }
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handleSignIn();
+    if (!isInvalid) {
+      handleSignIn();
+    }
   };
 
   return (
@@ -62,15 +88,24 @@ export default function AuthPage() {
               <form onSubmit={handleFormSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="userId" className="flex items-center text-muted-foreground"><User className="w-4 h-4 mr-2"/>User ID</Label>
-                  <Input id="userId" type="text" placeholder="Enter your User ID" value={userId} onChange={(e) => setUserId(e.target.value)} />
+                  <Input id="userId" type="text" placeholder="Enter your User ID" value={userId} onChange={(e) => handleInputChange(e.target.value, password)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password" className="flex items-center text-muted-foreground"><KeyRound className="w-4 h-4 mr-2"/>Password / Code</Label>
-                  <Input id="password" type="password" placeholder="Enter your password or code" value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <Input id="password" type="password" placeholder="Enter your password or code" value={password} onChange={(e) => handleInputChange(userId, e.target.value)} />
                 </div>
-                <Button type="submit" size="lg" className="w-full transition-all duration-300 hover:scale-105 hover:shadow-neon-primary !font-bold !text-lg">
-                  Sign In
-                </Button>
+                 <div className="h-12">
+                   <div
+                    className="relative transition-all duration-200"
+                    style={{
+                      transform: `translate(${position.x}px, ${position.y}px)`
+                    }}
+                  >
+                    <Button type="submit" size="lg" className="w-full transition-all duration-300 hover:scale-105 hover:shadow-neon-primary !font-bold !text-lg" disabled={isInvalid}>
+                      Sign In
+                    </Button>
+                  </div>
+                </div>
               </form>
             </CardContent>
           </Card>
