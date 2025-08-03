@@ -132,7 +132,7 @@ const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: 
             <Icon className="w-6 h-6 mr-3 text-primary" />
             <h2 className={cn("text-xl font-headline font-semibold text-foreground", titleClassName)}>{title}</h2>
         </div>
-        <div className="relative">
+        <div>
             {children}
         </div>
     </div>
@@ -140,7 +140,7 @@ const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: 
 
 
 const LectureEditDialog = ({ open, onOpenChange, lecture, onSave }: { open: boolean, onOpenChange: (open: boolean) => void, lecture: Lecture, onSave: (values: LectureFormValues) => void }) => {
-    const form = useForm<LectureFormValues>({
+    const formMethods = useForm<LectureFormValues>({
         resolver: zodResolver(lectureFormSchema),
         defaultValues: {
             subjectName: lecture.subjectName || '',
@@ -151,13 +151,13 @@ const LectureEditDialog = ({ open, onOpenChange, lecture, onSave }: { open: bool
     });
 
     useEffect(() => {
-        form.reset({
+        formMethods.reset({
             subjectName: lecture.subjectName || '',
             subjectCode: lecture.subjectCode || '',
             facultyName: lecture.facultyName || '',
             facultyCode: lecture.facultyCode || '',
         });
-    }, [lecture, form]);
+    }, [lecture, formMethods]);
 
 
     const onSubmit = (values: LectureFormValues) => {
@@ -171,25 +171,27 @@ const LectureEditDialog = ({ open, onOpenChange, lecture, onSave }: { open: bool
                 <DialogHeader>
                     <DialogTitle className="text-primary text-glow">Edit Lecture</DialogTitle>
                 </DialogHeader>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <FormField control={form.control} name="subjectName" render={({ field }) => (
-                            <FormItem><FormLabel><BookOpen className="w-4 h-4 mr-2 inline"/>Subject Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="subjectCode" render={({ field }) => (
-                            <FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Subject Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="facultyName" render={({ field }) => (
-                            <FormItem><FormLabel><User className="w-4 h-4 mr-2 inline"/>Faculty Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="facultyCode" render={({ field }) => (
-                            <FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Faculty Code</FormLabel><FormControl><Input {...field} placeholder="e.g. F001 (Optional)"/></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <div className="flex justify-end pt-4">
-                            <Button type="submit"><Save className="w-4 h-4 mr-2"/> Save Changes</Button>
-                        </div>
-                    </form>
-                </Form>
+                <FormProvider {...formMethods}>
+                    <Form {...formMethods}>
+                        <form onSubmit={formMethods.handleSubmit(onSubmit)} className="space-y-4">
+                            <FormField control={formMethods.control} name="subjectName" render={({ field }) => (
+                                <FormItem><FormLabel><BookOpen className="w-4 h-4 mr-2 inline"/>Subject Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={formMethods.control} name="subjectCode" render={({ field }) => (
+                                <FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Subject Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={formMethods.control} name="facultyName" render={({ field }) => (
+                                <FormItem><FormLabel><User className="w-4 h-4 mr-2 inline"/>Faculty Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={formMethods.control} name="facultyCode" render={({ field }) => (
+                                <FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Faculty Code</FormLabel><FormControl><Input {...field} placeholder="e.g. F001 (Optional)"/></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <div className="flex justify-end pt-4">
+                                <Button type="submit"><Save className="w-4 h-4 mr-2"/> Save Changes</Button>
+                            </div>
+                        </form>
+                    </Form>
+                </FormProvider>
             </DialogContent>
         </Dialog>
     );
