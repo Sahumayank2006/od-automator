@@ -175,6 +175,65 @@ const btechCse3B_Timetable: TimetableData = {
     },
 };
 
+const btechCse3C_Timetable: TimetableData = {
+    course: 'B.Tech',
+    program: 'CSE',
+    semester: '3',
+    section: 'C',
+    schedule: {
+        Monday: [
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'Digital Electronics and Logic Design', subjectCode: 'ECE 306', facultyName: 'Ms. Rashmi Tikar', facultyCode: 'RSH' },
+            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'Applied Mathematics - III', subjectCode: 'MAT 301', facultyName: 'Dr. Rajat Vaish', facultyCode: 'RJT' },
+            { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'LIBRARY/CCA', subjectCode: 'LIBRARY/CCA', facultyName: '', facultyCode: '' },
+            { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'Behavioural Science - III', subjectCode: 'BSU 341', facultyName: 'A.Daniel', facultyCode: 'CS_VF' },
+            { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
+            { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'French - III', subjectCode: 'FLU 344', facultyName: 'Mr. Balkishan', facultyCode: 'BLK' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'CSE Specialization', subjectCode: 'CSE Spec.', facultyName: '', facultyCode: '' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'Python Programming', subjectCode: 'CSE 302/CSE510', facultyName: 'Dr. Ashok Kr Shrivast', facultyCode: 'ASK' },
+        ],
+        Tuesday: [
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'CSE Specialization', subjectCode: 'CSE Spec.', facultyName: '', facultyCode: '' },
+            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'Python Programming', subjectCode: 'CSE 302/CSE510', facultyName: 'Dr. Ashok Kr Shrivast', facultyCode: 'ASK' },
+            { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'Digital Electronics and Logic Design', subjectCode: 'ECE 306', facultyName: 'Ms. Rashmi Tikar', facultyCode: 'RSH' },
+            { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'Behavioural Science - III', subjectCode: 'BSU 341', facultyName: 'A.Daniel', facultyCode: 'CS_VF' },
+            { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
+            { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'Data Structures Through C++', subjectCode: 'CSE 202', facultyName: 'A.Daniel', facultyCode: 'DAN' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'LIBRARY/CCA', subjectCode: 'LIBRARY/CCA', facultyName: '', facultyCode: '' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'Python Programming Lab', subjectCode: 'CSE 322/ CSE 530', facultyName: 'Arunima Shivhare', facultyCode: 'ARM' },
+        ],
+        Wednesday: [
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'Database Management Systems', subjectCode: 'CSE 304', facultyName: 'Ms. Nishtha Parashar', facultyCode: 'NST' },
+            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'Python Programming', subjectCode: 'CSE 302/CSE510', facultyName: 'Dr. Ashok Kr Shrivast', facultyCode: 'ASK' },
+            { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'Applied Mathematics - III', subjectCode: 'MAT 301', facultyName: 'Dr. Rajat Vaish', facultyCode: 'RJT' },
+            { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'Database Management Systems', subjectCode: 'CSE 304', facultyName: 'Ms. Nishtha Parashar', facultyCode: 'NST' },
+            { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
+            { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'Digital Electronics and Logic Design', subjectCode: 'ECE 306', facultyName: 'Ms. Rashmi Tikar', facultyCode: 'RSH' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'CSE Specialization', subjectCode: 'CSE Spec.', facultyName: '', facultyCode: '' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'Data Structures Through C++', subjectCode: 'CSE 202', facultyName: 'A.Daniel', facultyCode: 'DAN' },
+        ],
+        Thursday: [
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'CSE Specialization', subjectCode: 'CSE Spec.', facultyName: '', facultyCode: '' },
+            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'CSE Specialization', subjectCode: 'CSE Spec.', facultyName: '', facultyCode: '' },
+            { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'Digital Electronics and Logic Design Lab', subjectCode: 'ECE 326', facultyName: 'Dr. Rinkoo Bhatia', facultyCode: 'RNK' },
+            { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'Database Management Systems Lab', subjectCode: 'CSE 324', facultyName: 'Jeetendra Singh Bhad', facultyCode: 'JTS' },
+            { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
+            { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'Database Management Systems Lab', subjectCode: 'CSE 324', facultyName: 'Jeetendra Singh Bhad', facultyCode: 'JTS' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'LIBRARY/CCA', subjectCode: 'LIBRARY/CCA', facultyName: '', facultyCode: '' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'Database Management Systems', subjectCode: 'CSE 304', facultyName: 'Ms. Nishtha Parashar', facultyCode: 'NST' },
+        ],
+        Friday: [
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'Applied Mathematics - III', subjectCode: 'MAT 301', facultyName: 'Dr. Rajat Vaish', facultyCode: 'RJT' },
+            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'Behavioural Science - III', subjectCode: 'BSU 343', facultyName: 'Dr. Vikas Sharma', facultyCode: 'VSH' },
+            { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'Python Programming Lab', subjectCode: 'CSE 322/ CSE 530', facultyName: 'Arunima Shivhare', facultyCode: 'ARM' },
+            { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'Digital Electronics and Logic Design Lab', subjectCode: 'ECE 326', facultyName: 'Dr. Rinkoo Bhatia', facultyCode: 'RNK' },
+            { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
+            { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'Data Structures Through C++', subjectCode: 'CSE 202', facultyName: 'A.Daniel', facultyCode: 'DAN' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'LIBRARY/CCA', subjectCode: 'LIBRARY/CCA', facultyName: '', facultyCode: '' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'LIBRARY/CCA', subjectCode: 'LIBRARY/CCA', facultyName: '', facultyCode: '' },
+        ],
+    },
+};
+
 
 const generateInitialSchedule = (): Record<string, Lecture[]> => {
     const schedule: Record<string, Lecture[]> = {};
@@ -186,15 +245,13 @@ const generateInitialSchedule = (): Record<string, Lecture[]> => {
 
 
 const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: string; icon: React.ElementType, children: React.ReactNode, titleClassName?: string }) => (
-    <div className="glass-panel p-6 md:p-8 relative">
+    <div className="glass-panel p-6 md:p-8">
         <div className="absolute -inset-px bg-gradient-to-r from-primary/50 to-accent/50 rounded-2xl blur-lg opacity-25 group-hover:opacity-50 transition-opacity duration-500"></div>
         <div className="relative flex items-center mb-6">
             <Icon className="w-6 h-6 mr-3 text-primary" />
             <h2 className={cn("text-xl font-headline font-semibold text-foreground", titleClassName)}>{title}</h2>
         </div>
-        <div className="relative">
-            {children}
-        </div>
+        {children}
     </div>
 );
 
@@ -289,6 +346,7 @@ export default function TimetablePage() {
     const [allTimetables, setAllTimetables] = useState<Record<string, TimetableData>>({
         'B.Tech-CSE-3-A': btechCse3A_Timetable,
         'B.Tech-CSE-3-B': btechCse3B_Timetable,
+        'B.Tech-CSE-3-C': btechCse3C_Timetable,
     });
 
     useEffect(() => {
