@@ -1,10 +1,13 @@
+
 'use client';
 
-import Link from 'next/link';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import { User, KeyRound } from 'lucide-react';
 
 const AmityLogoPlaceholder = () => (
@@ -14,6 +17,29 @@ const AmityLogoPlaceholder = () => (
 );
 
 export default function AuthPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [userId, setUserId] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSignIn = () => {
+    // Hardcoded credentials for demonstration
+    if (userId === 'admin' && password === 'password') {
+      router.push('/dashboard');
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Sign In Failed',
+        description: 'Invalid User ID or Password.',
+      });
+    }
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSignIn();
+  };
+
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
       <div className="w-full max-w-md">
@@ -28,20 +54,20 @@ export default function AuthPage() {
                 Streamline your On-Duty requests with our intelligent AI-powered form.
               </p>
             </CardHeader>
-            <CardContent className="mt-6 space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="userId" className="flex items-center text-muted-foreground"><User className="w-4 h-4 mr-2"/>User ID</Label>
-                <Input id="userId" type="text" placeholder="Enter your User ID" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="flex items-center text-muted-foreground"><KeyRound className="w-4 h-4 mr-2"/>Password / Code</Label>
-                <Input id="password" type="password" placeholder="Enter your password or code" />
-              </div>
-               <Link href="/dashboard" passHref>
-                  <Button type="submit" size="lg" className="w-full transition-all duration-300 hover:scale-105 hover:shadow-neon-primary !font-bold !text-lg">
-                    Sign In
-                  </Button>
-                </Link>
+            <CardContent className="mt-6">
+              <form onSubmit={handleFormSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="userId" className="flex items-center text-muted-foreground"><User className="w-4 h-4 mr-2"/>User ID</Label>
+                  <Input id="userId" type="text" placeholder="Enter your User ID" value={userId} onChange={(e) => setUserId(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="flex items-center text-muted-foreground"><KeyRound className="w-4 h-4 mr-2"/>Password / Code</Label>
+                  <Input id="password" type="password" placeholder="Enter your password or code" value={password} onChange={(e) => setPassword(e.target.value)} />
+                </div>
+                <Button type="submit" size="lg" className="w-full transition-all duration-300 hover:scale-105 hover:shadow-neon-primary !font-bold !text-lg">
+                  Sign In
+                </Button>
+              </form>
             </CardContent>
           </Card>
         </div>
