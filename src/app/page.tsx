@@ -25,6 +25,10 @@ export default function AuthPage() {
   const handleSignIn = () => {
     // Hardcoded credentials for demonstration
     if (userId === 'admin' && password === 'password') {
+      toast({
+        title: 'Sign In Successful',
+        description: 'Welcome to OD Automator!',
+      });
       router.push('/dashboard');
     } else {
       toast({
