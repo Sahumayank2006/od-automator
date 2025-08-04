@@ -28,6 +28,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, LogOut, GraduationCap, Copy, Zap, Table } from 'lucide-react';
 import type { TimetableData } from '@/app/timetable/page';
+import { defaultTimetables } from '@/lib/timetables';
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -119,8 +120,9 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
         }
 
         const storedTimetables = JSON.parse(localStorage.getItem('timetables') || '{}');
+        const allTimetables = { ...defaultTimetables, ...storedTimetables };
         const timetableKey = `${course}-${program}-${semester}-${section}`;
-        const timetable: TimetableData = storedTimetables[timetableKey];
+        const timetable: TimetableData = allTimetables[timetableKey];
 
         if (!timetable) {
             toast({ variant: 'destructive', title: "No Timetable Found", description: "A timetable for this class and section has not been created yet." });
