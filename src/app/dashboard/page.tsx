@@ -101,6 +101,7 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
     const lectureStartTimes = ["09:15", "10:15", "11:15", "12:15", "13:15", "14:15", "15:15", "16:15"];
     
     const timeToMinutes = (time: string) => {
+      if (!time || !time.includes(':')) return 0;
       const [hours, minutes] = time.split(':').map(Number);
       return hours * 60 + minutes;
     };
@@ -145,12 +146,17 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
             const lectureStartMinutes = timeToMinutes(lecture.fromTime);
             const lectureEndMinutes = timeToMinutes(lecture.toTime);
             
-            // Check for any overlap between event and lecture
-            return Math.max(eventStartMinutes, lectureStartMinutes) < Math.min(eventEndMinutes, lectureEndMinutes);
+            // Calculate the overlap duration
+            const overlapStart = Math.max(eventStartMinutes, lectureStartMinutes);
+            const overlapEnd = Math.min(eventEndMinutes, lectureEndMinutes);
+            const overlapDuration = overlapEnd - overlapStart;
+
+            // Check if the overlap is 15 minutes or more
+            return overlapDuration >= 15;
         });
 
         if (conflictingLectures.length === 0) {
-            toast({ title: "No Conflicts", description: "No lectures conflict with the specified event time." });
+            toast({ title: "No Conflicts", description: "No lectures conflict with the specified event time for 15 minutes or more." });
             return;
         }
 
