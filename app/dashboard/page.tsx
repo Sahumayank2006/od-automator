@@ -349,9 +349,9 @@ export default function DashboardPage() {
     const handleGeneratePdf = async (data: ODFormValues) => {
         setIsGeneratingPdf(true);
         const { default: jsPDF } = await import('jspdf');
-        const { default: autoTable } = await import('jspdf-autotable');
+        await import('jspdf-autotable');
 
-        const doc = new jsPDF();
+        const doc = new (jsPDF as any)();
         let yPos = 45;
     
         // Add content to the PDF
@@ -365,7 +365,7 @@ export default function DashboardPage() {
         doc.setFont('helvetica', 'bold');
         doc.text("Faculty Coordinator Information", 14, yPos);
         yPos += 7;
-        autoTable(doc, {
+        doc.autoTable({
             startY: yPos,
             head: [['Name', 'Email']],
             body: [[data.facultyCoordinatorName, data.facultyCoordinatorEmail]],
@@ -373,13 +373,13 @@ export default function DashboardPage() {
             styles: { fontSize: 10 },
             headStyles: { fillColor: [22, 160, 133] },
         });
-        yPos = (doc as any).lastAutoTable.finalY + 10;
+        yPos = doc.lastAutoTable.finalY + 10;
     
         // Event Details
         doc.setFont('helvetica', 'bold');
         doc.text("Event Information", 14, yPos);
         yPos += 7;
-        autoTable(doc, {
+        doc.autoTable({
             startY: yPos,
             head: [['Event Name', 'Date', 'Day', 'From', 'To']],
             body: [[
@@ -393,7 +393,7 @@ export default function DashboardPage() {
             styles: { fontSize: 10 },
             headStyles: { fillColor: [22, 160, 133] },
         });
-        yPos = (doc as any).lastAutoTable.finalY + 10;
+        yPos = doc.lastAutoTable.finalY + 10;
     
         // Classes and Lectures
         doc.setFont('helvetica', 'bold');
@@ -408,7 +408,7 @@ export default function DashboardPage() {
             yPos += 6;
     
             const lectureBody = classInfo.lectures.map(lec => [lec.subject, lec.faculty, `${lec.fromTime} - ${lec.toTime}`]);
-            autoTable(doc, {
+            doc.autoTable({
                 startY: yPos,
                 head: [['Subject', 'Faculty', 'Time Slot']],
                 body: lectureBody,
@@ -416,7 +416,7 @@ export default function DashboardPage() {
                 styles: { fontSize: 9 },
                 headStyles: { fillColor: [41, 128, 185] },
             });
-            yPos = (doc as any).lastAutoTable.finalY + 5;
+            yPos = doc.lastAutoTable.finalY + 5;
             
             // Student List per Lecture
             classInfo.lectures.forEach((lecture) => {
@@ -425,7 +425,7 @@ export default function DashboardPage() {
                 doc.text(`Students for: ${lecture.subject} (${lecture.fromTime} - ${lecture.toTime})`, 14, yPos);
                 yPos += 5;
                 const studentList = lecture.students.split('\n').map(s => [s]);
-                autoTable(doc, {
+                doc.autoTable({
                     startY: yPos,
                     head: [['Student Name & Enrollment No.']],
                     body: studentList,
@@ -433,7 +433,7 @@ export default function DashboardPage() {
                     styles: { fontSize: 8 },
                     headStyles: { fillColor: [80, 80, 80] },
                 });
-                yPos = (doc as any).lastAutoTable.finalY + 8;
+                yPos = doc.lastAutoTable.finalY + 8;
             });
         });
     
@@ -630,3 +630,5 @@ export default function DashboardPage() {
         </FormProvider>
     );
 }
+
+    
