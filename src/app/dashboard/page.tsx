@@ -7,7 +7,7 @@ import * as z from 'zod';
 import React, { useEffect, useState } from 'react';
 import { format, addMinutes, getDay } from 'date-fns';
 import Link from 'next/link';
-import jsPDF from 'jspdf';
+import type jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { sendEmail } from './actions';
 
@@ -26,8 +26,8 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, LogOut, GraduationCap, Copy, Zap, Table } from 'lucide-react';
-import type { TimetableData } from '@/app/timetable/page';
+import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, LogOut, GraduationCap, Copy, Table } from 'lucide-react';
+import type { TimetableData } from '../timetable/page';
 import { defaultTimetables } from '@/lib/timetables';
 
 const lectureSchema = z.object({
@@ -141,7 +141,7 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
         if (!daySchedule) return;
 
         const conflictingLectures = daySchedule.filter(lecture => {
-            if (!lecture.fromTime || !lecture.toTime || !lecture.subjectName) return false;
+            if (!lecture.fromTime || !lecture.toTime || !lecture.subjectName || lecture.subjectName.toUpperCase().includes('LIBRARY') || lecture.subjectName.toUpperCase().includes('CCA')) return false;
             
             const lectureStartMinutes = timeToMinutes(lecture.fromTime);
             const lectureEndMinutes = timeToMinutes(lecture.toTime);
@@ -292,6 +292,7 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
 export default function DashboardPage() {
     const { toast } = useToast();
     const [isSending, setIsSending] = useState(false);
+    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
 
     useEffect(() => {
@@ -327,7 +328,11 @@ export default function DashboardPage() {
         name: "classes",
     });
     
-    const handleGeneratePdf = (data: ODFormValues) => {
+    const handleGeneratePdf = async (data: ODFormValues) => {
+        setIsGeneratingPdf(true);
+        const { default: jsPDF } = await import('jspdf');
+        const { default: autoTable } = await import('jspdf-autotable');
+
         const doc = new jsPDF();
         let yPos = 45;
     
@@ -342,7 +347,7 @@ export default function DashboardPage() {
         doc.setFont('helvetica', 'bold');
         doc.text("Faculty Coordinator Information", 14, yPos);
         yPos += 7;
-        (doc as any).autoTable({
+        autoTable(doc, {
             startY: yPos,
             head: [['Name', 'Email']],
             body: [[data.facultyCoordinatorName, data.facultyCoordinatorEmail]],
@@ -356,7 +361,7 @@ export default function DashboardPage() {
         doc.setFont('helvetica', 'bold');
         doc.text("Event Information", 14, yPos);
         yPos += 7;
-        (doc as any).autoTable({
+        autoTable(doc, {
             startY: yPos,
             head: [['Event Name', 'Date', 'Day', 'From', 'To']],
             body: [[
@@ -385,7 +390,7 @@ export default function DashboardPage() {
             yPos += 6;
     
             const lectureBody = classInfo.lectures.map(lec => [lec.subject, lec.faculty, `${lec.fromTime} - ${lec.toTime}`]);
-            (doc as any).autoTable({
+            autoTable(doc, {
                 startY: yPos,
                 head: [['Subject', 'Faculty', 'Time Slot']],
                 body: lectureBody,
@@ -402,7 +407,7 @@ export default function DashboardPage() {
                 doc.text(`Students for: ${lecture.subject} (${lecture.fromTime} - ${lecture.toTime})`, 14, yPos);
                 yPos += 5;
                 const studentList = lecture.students.split('\n').map(s => [s]);
-                (doc as any).autoTable({
+                autoTable(doc, {
                     startY: yPos,
                     head: [['Student Name & Enrollment No.']],
                     body: studentList,
@@ -415,6 +420,7 @@ export default function DashboardPage() {
         });
     
         doc.save(`OD_Application_${data.eventName.replace(/ /g, '_')}.pdf`);
+        setIsGeneratingPdf(false);
     };
 
     const handleSendEmail = async (data: ODFormValues) => {
@@ -542,46 +548,5 @@ export default function DashboardPage() {
                                                     <FormLabel>To</FormLabel>
                                                     <FormControl><Input type="time" {...field} /></FormControl>
                                                     <FormMessage />
-                                                </FormItem>
-                                            )}/>
-                                        </div>
-                                    </div>
-                                </SectionPanel>
-                            </div>
-
-
-                            <SectionPanel title="Class & Lecture Details" icon={Building}>
-                                <Accordion type="multiple" className="space-y-4">
-                                    {classFields.map((classField, classIndex) => (
-                                        <ClassAccordionItem 
-                                            key={classField.id}
-                                            classField={classField}
-                                            classIndex={classIndex}
-                                            removeClass={removeClass}
-                                            control={form.control}
-                                            form={form}
-                                        />
-                                    ))}
-                                </Accordion>
-                                <Button type="button" onClick={() => appendClass({ id: crypto.randomUUID(), course: '', program: '', semester: '', section: 'A', lectures: []})} className="mt-4 w-full"><PlusCircle className="mr-2 h-4 w-4" /> Add Another Class</Button>
-                            </SectionPanel>
-                            
-                            <div className="sticky bottom-0 z-10 py-4 bg-background/80 backdrop-blur-sm">
-                                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-center gap-4">
-                                    <Button size="lg" type="button" onClick={form.handleSubmit(handleGeneratePdf)} className="w-full md:w-auto md:flex-1">
-                                        <FileText className="mr-2 w-5 h-5"/>
-                                        Generate PDF
-                                    </Button>
-                                    <Button size="lg" type="button" onClick={form.handleSubmit(handleSendEmail)} disabled={isSending} className="w-full md:w-auto md:flex-1">
-                                        <Mail className="mr-2 w-5 h-5"/>
-                                        {isSending ? 'Sending...' : 'Send Email'}
-                                    </Button>
-                                </div>
-                            </div>
-                        </form>
-                    </Form>
-                </div>
-            </ScrollArea>
-        </FormProvider>
-    );
-}
+                                                </FormMessa...
+This is a large diff. Click to expand.
