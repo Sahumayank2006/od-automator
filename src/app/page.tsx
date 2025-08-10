@@ -1,85 +1,103 @@
+import type {Config} from 'tailwindcss';
 
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { User, KeyRound } from 'lucide-react';
-
-const AmityLogoPlaceholder = () => (
-  <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 text-primary ring-4 ring-primary/20">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-graduation-cap h-8 w-8"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.084a1 1 0 0 0 0 1.838l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 6 0 0 0 12 0v-3.5"/></svg>
-  </div>
-);
-
-export default function AuthPage() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [userId, setUserId] = useState('');
-  const [password, setPassword] = useState('');
-
-  const correctUserId = process.env.NEXT_PUBLIC_ADMIN_USER_ID || 'admin';
-  const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'password';
-
-  const handleSignIn = () => {
-    if (userId === correctUserId && password === correctPassword) {
-      toast({
-        title: 'Sign In Successful',
-        description: 'Welcome to OD Automator!',
-      });
-      router.push('/dashboard');
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Sign In Failed',
-        description: 'Invalid User ID or Password.',
-      });
-    }
-  };
-
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleSignIn();
-  };
-
-  return (
-    <main className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
-      <div className="w-full max-w-md">
-        <div className="relative">
-          <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-2xl blur-lg opacity-25"></div>
-          <Card className="relative bg-secondary/20 backdrop-blur-lg border border-white/10">
-            <CardHeader className="text-center">
-              <AmityLogoPlaceholder />
-              <CardTitle className="text-xl font-headline font-bold uppercase tracking-widest text-primary text-glow">Amity University</CardTitle>
-              <CardDescription className="text-5xl font-headline font-bold text-foreground text-glow !mt-2">OD Automator</CardDescription>
-              <p className="text-muted-foreground font-body mt-4">
-                Streamline your On-Duty requests with our intelligent AI-powered form.
-              </p>
-            </CardHeader>
-            <CardContent className="mt-6">
-              <form onSubmit={handleFormSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="userId" className="flex items-center text-muted-foreground"><User className="w-4 h-4 mr-2"/>User ID</Label>
-                  <Input id="userId" type="text" placeholder="Enter your User ID" value={userId} onChange={(e) => setUserId(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="flex items-center text-muted-foreground"><KeyRound className="w-4 h-4 mr-2"/>Password / Code</Label>
-                  <Input id="password" type="password" placeholder="Enter your password or code" value={password} onChange={(e) => setPassword(e.target.value)} />
-                </div>
-                 <div className="h-12">
-                    <Button type="submit" size="lg" className="w-full transition-all duration-300 hover:scale-105 hover:shadow-neon-primary !font-bold !text-lg">
-                      Sign In
-                    </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </main>
-  );
-}
+export default {
+  darkMode: ['class'],
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      fontFamily: {
+        body: ['"PT Sans"', 'sans-serif'],
+        headline: ['"Poppins"', 'sans-serif'],
+        code: ['monospace'],
+      },
+      colors: {
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
+        },
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
+        },
+        primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
+        },
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
+        },
+        accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
+        },
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        chart: {
+          '1': 'hsl(var(--chart-1))',
+          '2': 'hsl(var(--chart-2))',
+          '3': 'hsl(var(--chart-3))',
+          '4': 'hsl(var(--chart-4))',
+          '5': 'hsl(var(--chart-5))',
+        },
+        sidebar: {
+          DEFAULT: 'hsl(var(--sidebar-background))',
+          foreground: 'hsl(var(--sidebar-foreground))',
+          primary: 'hsl(var(--sidebar-primary))',
+          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
+          accent: 'hsl(var(--sidebar-accent))',
+          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+          border: 'hsl(var(--sidebar-border))',
+          ring: 'hsl(var(--sidebar-ring))',
+        },
+      },
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
+      },
+      boxShadow: {
+        'neon-primary': '0 0 10px hsl(var(--primary) / 0.7)',
+      },
+      keyframes: {
+        'accordion-down': {
+          from: {
+            height: '0',
+          },
+          to: {
+            height: 'var(--radix-accordion-content-height)',
+          },
+        },
+        'accordion-up': {
+          from: {
+            height: 'var(--radix-accordion-content-height)',
+          },
+          to: {
+            height: '0',
+          },
+        },
+      },
+      animation: {
+        'accordion-down': 'accordion-down 0.3s ease-out',
+        'accordion-up': 'accordion-up 0.3s ease-out',
+      },
+    },
+  },
+  plugins: [require('tailwindcss-animate')],
+} satisfies Config;
