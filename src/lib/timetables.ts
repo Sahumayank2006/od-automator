@@ -57,6 +57,8 @@ const btechCse3A_Timetable: TimetableData = {
             { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'Digital Electronics and Logic Design Lab', subjectCode: 'ECE 326', facultyName: 'Ms. Rashmi Tikar', facultyCode: '' },
             { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'LIBRARY/CCA', subjectCode: 'LIBRARY', facultyName: '', facultyCode: '' },
         ],
+        Saturday: [],
+        Sunday: [],
     },
 };
 
@@ -116,6 +118,8 @@ const btechCse3B_Timetable: TimetableData = {
             { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'Applied Mathematics - III', subjectCode: 'MAT 301', facultyName: 'Dr. Rajat Vaish', facultyCode: '' },
             { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'LIBRARY/CCA', subjectCode: 'LIBRARY/CCA', facultyName: '', facultyCode: '' },
         ],
+        Saturday: [],
+        Sunday: [],
     },
 };
 
@@ -175,6 +179,8 @@ const btechCse3C_Timetable: TimetableData = {
             { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'LIBRARY/CCA', subjectCode: 'LIBRARY/CCA', facultyName: '', facultyCode: '' },
             { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'LIBRARY/CCA', subjectCode: 'LIBRARY/CCA', facultyName: '', facultyCode: '' },
         ],
+        Saturday: [],
+        Sunday: [],
     },
 };
 
