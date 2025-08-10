@@ -1,4 +1,4 @@
-'use client';
+'use server';
 /**
  * @fileoverview
  * This file defines a Genkit flow for extracting timetable information from an image.
