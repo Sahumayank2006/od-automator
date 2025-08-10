@@ -31,7 +31,7 @@ const ExtractTimetableOutputSchema = z.object({
     program: z.string().optional().describe("The program name, e.g., CSE"),
     semester: z.string().optional().describe("The semester, e.g., 3"),
     section: z.string().optional().describe("The section, e.g., A"),
-    schedule: PartialScheduleSchema,
+    schedule: PartialScheduleSchema.optional(),
 });
 
 const timetablePrompt = ai.definePrompt(
@@ -79,8 +79,8 @@ export const extractTimetableFlow = ai.defineFlow(
     });
 
     const extractedData = llmResponse.output();
-
-    if (!extractedData) {
+    
+    if (!extractedData || !extractedData.schedule) {
         throw new Error("Failed to extract timetable from the provided file.");
     }
     

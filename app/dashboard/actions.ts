@@ -4,7 +4,6 @@ import nodemailer from 'nodemailer';
 import { render } from '@react-email/render';
 import { ODRequestEmail } from '@/emails/od-request';
 import type { ODFormValues } from './page';
-import { generate } from 'genkit/ai';
 import { extractTimetableFlow } from '@/ai/flows/extract-timetable-flow';
 
 export async function sendEmail(data: ODFormValues) {
