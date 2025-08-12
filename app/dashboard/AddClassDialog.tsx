@@ -130,8 +130,8 @@ export function AddClassDialog({ open, onOpenChange, onSave }: { open: boolean, 
                 <FormProvider {...form}>
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
-                             <ScrollArea className="flex-1 pr-6 -mr-6">
-                                <div className="space-y-6 pr-6">
+                            <div className="flex-1 overflow-y-auto pr-6">
+                                <div className="space-y-6">
                                     <div className="grid md:grid-cols-3 gap-6">
                                         <FormField control={form.control} name="course" render={({ field }) => (<FormItem><FormLabel>Course Name</FormLabel><Combobox options={courseOptions} {...field} placeholder="Select course..." /><FormMessage /></FormItem>)} />
                                         <FormField control={form.control} name="program" render={({ field }) => (<FormItem><FormLabel>Program</FormLabel><Combobox options={programOptions} {...field} placeholder="Select program..." /><FormMessage /></FormItem>)} />
@@ -196,7 +196,7 @@ export function AddClassDialog({ open, onOpenChange, onSave }: { open: boolean, 
                                         
                                     </div>
                                 </div>
-                            </ScrollArea>
+                            </div>
                             <DialogFooter className="mt-6 flex-shrink-0">
                                 <DialogClose asChild>
                                     <Button type="button" variant="secondary">Cancel</Button>
