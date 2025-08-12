@@ -290,7 +290,7 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
                                     </div>
                                 </div>
                             </ScrollArea>
-                            <DialogFooter className="mt-6 flex-shrink-0">
+                            <DialogFooter className="mt-6 flex-shrink-0 pr-6">
                                 <DialogClose asChild>
                                     <Button type="button" variant="secondary">Cancel</Button>
                                 </DialogClose>
