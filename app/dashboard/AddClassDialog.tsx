@@ -123,15 +123,15 @@ export function AddClassDialog({ open, onOpenChange, onSave }: { open: boolean, 
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl bg-secondary border-primary/50">
+            <DialogContent className="max-w-4xl h-[90vh] flex flex-col bg-secondary border-primary/50">
                 <DialogHeader>
                     <DialogTitle className="text-primary text-glow">Add New Class</DialogTitle>
                 </DialogHeader>
                 <FormProvider {...form}>
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)}>
-                             <ScrollArea className="h-[70vh] p-4">
-                                <div className="space-y-6">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
+                             <ScrollArea className="flex-1 pr-6 -mr-6">
+                                <div className="space-y-6 pr-6">
                                     <div className="grid md:grid-cols-3 gap-6">
                                         <FormField control={form.control} name="course" render={({ field }) => (<FormItem><FormLabel>Course Name</FormLabel><Combobox options={courseOptions} {...field} placeholder="Select course..." /><FormMessage /></FormItem>)} />
                                         <FormField control={form.control} name="program" render={({ field }) => (<FormItem><FormLabel>Program</FormLabel><Combobox options={programOptions} {...field} placeholder="Select program..." /><FormMessage /></FormItem>)} />
@@ -197,7 +197,7 @@ export function AddClassDialog({ open, onOpenChange, onSave }: { open: boolean, 
                                     </div>
                                 </div>
                             </ScrollArea>
-                            <DialogFooter className="mt-6 pr-4">
+                            <DialogFooter className="mt-6 flex-shrink-0">
                                 <DialogClose asChild>
                                     <Button type="button" variant="secondary">Cancel</Button>
                                 </DialogClose>
