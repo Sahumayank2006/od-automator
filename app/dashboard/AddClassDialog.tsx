@@ -301,5 +301,3 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
         </Dialog>
     );
 }
-
-    
