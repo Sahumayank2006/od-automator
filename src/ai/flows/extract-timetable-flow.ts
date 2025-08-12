@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileoverview
@@ -37,10 +38,9 @@ const ExtractTimetableOutputSchema = z.object({
 const timetablePrompt = ai.definePrompt(
   {
     name: 'timetableExtractor',
-    inputSchema: ExtractTimetableInputSchema,
-    outputSchema: ExtractTimetableOutputSchema,
-  },
-  `You are an expert at reading and parsing class schedules from images. 
+    input: { schema: ExtractTimetableInputSchema },
+    output: { schema: ExtractTimetableOutputSchema },
+    prompt: `You are an expert at reading and parsing class schedules from images. 
   Your task is to extract the timetable information from the provided image and return it in a structured JSON format.
   The timetable has days of the week as rows and time slots as columns.
   Each cell in the timetable contains the subject name, subject code, and faculty name/code.
@@ -63,6 +63,7 @@ const timetablePrompt = ai.definePrompt(
 
   Here is the image you need to process:
   {{media url=image}}`
+  }
 );
 
 
@@ -74,11 +75,9 @@ export const extractTimetableFlow = ai.defineFlow(
   },
   async (input): Promise<TimetableData> => {
 
-    const llmResponse = await timetablePrompt.generate({
-      input: { image: input.image },
-    });
+    const llmResponse = await timetablePrompt(input);
 
-    const extractedData = llmResponse.output();
+    const extractedData = llmResponse.output;
     
     if (!extractedData || !extractedData.schedule) {
         throw new Error("Failed to extract timetable from the provided file.");
