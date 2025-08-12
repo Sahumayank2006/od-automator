@@ -45,7 +45,7 @@ const classSchema = z.object({
   program: z.string().min(1, "Program is required."),
   semester: z.string().min(1, "Semester is required."),
   section: z.enum(["A", "B", "C", "D", "E"], { required_error: "Section is required." }),
-  lectures: z.array(lectureSchema).min(1, "At least one lecture must be added."),
+  lectures: z.array(lectureSchema),
 });
 
 const odFormSchema = z.object({
@@ -74,153 +74,19 @@ const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: 
     </div>
 );
 
-const courseOptions = [
-    { value: 'B.Tech', label: 'B.Tech' },
-    { value: 'BCA', label: 'BCA' },
-    { value: 'MCA', label: 'MCA' },
-];
-
-const programOptions = [
-    { value: 'IT', label: 'Information Technology' },
-    { value: 'CSE', label: 'Computer Science' },
-    { value: 'ECE', label: 'Electronics' },
-];
-
-const semesterOptions = Array.from({ length: 8 }, (_, i) => ({
-    value: String(i + 1),
-    label: `Semester ${i + 1}`,
-}));
-
-const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form }: { classField: any, classIndex: number, removeClass: (index: number) => void, control: any, form: any }) => {
-    const { fields: lectureFields, append: appendLecture, remove: removeLecture } = useFieldArray({
-        control,
-        name: `classes.${classIndex}.lectures`
-    });
-    const { toast } = useToast();
-
-    const lectureStartTimes = ["09:15", "10:15", "11:15", "12:15", "13:15", "14:15", "15:15", "16:15"];
-    
-    const timeToMinutes = (time: string) => {
-      if (!time || !time.includes(':')) return 0;
-      const [hours, minutes] = time.split(':').map(Number);
-      return hours * 60 + minutes;
-    };
-    
-    const handleAutofill = () => {
-        const { course, program, semester, section } = form.getValues(`classes.${classIndex}`);
-        const { eventDate, eventFromTime, eventToTime } = form.getValues();
-        
-        if (!course || !program || !semester || !section) {
-            toast({ variant: 'destructive', title: "Missing Class Details", description: "Please select course, program, semester, and section." });
-            return;
-        }
-
-        if (!eventDate || !eventFromTime || !eventToTime) {
-            toast({ variant: 'destructive', title: "Missing Event Details", description: "Please provide the event date and time." });
-            return;
-        }
-
-        const storedTimetables = JSON.parse(localStorage.getItem('timetables') || '{}');
-        const allTimetables = { ...defaultTimetables, ...storedTimetables };
-        const timetableKey = `${course}-${program}-${semester}-${section}`;
-        const timetable: TimetableData = allTimetables[timetableKey];
-
-        if (!timetable) {
-            toast({ variant: 'destructive', title: "No Timetable Found", description: "A timetable for this class and section has not been created yet." });
-            return;
-        }
-
-        const eventDayIndex = (getDay(eventDate) + 6) % 7; // Monday = 0, Sunday = 6
-        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        const eventDayName = days[eventDayIndex];
-
-        const eventStartMinutes = timeToMinutes(eventFromTime);
-        const eventEndMinutes = timeToMinutes(eventToTime);
-
-        const daySchedule = timetable.schedule[eventDayName];
-        if (!daySchedule) return;
-
-        const conflictingLectures = daySchedule.filter(lecture => {
-            if (!lecture.fromTime || !lecture.toTime || !lecture.subjectName || lecture.subjectName.toUpperCase().includes('LIBRARY') || lecture.subjectName.toUpperCase().includes('CCA')) return false;
-            
-            const lectureStartMinutes = timeToMinutes(lecture.fromTime);
-            const lectureEndMinutes = timeToMinutes(lecture.toTime);
-            
-            // Calculate the overlap duration
-            const overlapStart = Math.max(eventStartMinutes, lectureStartMinutes);
-            const overlapEnd = Math.min(eventEndMinutes, lectureEndMinutes);
-            const overlapDuration = overlapEnd - overlapStart;
-
-            // Check if the overlap is 15 minutes or more
-            return overlapDuration >= 15;
-        });
-
-        if (conflictingLectures.length === 0) {
-            toast({ title: "No Conflicts", description: "No lectures conflict with the specified event time for 15 minutes or more." });
-            return;
-        }
-
-        // Clear existing lectures before adding new ones
-        removeLecture(Array.from({length: lectureFields.length}, (_, i) => i));
-
-        conflictingLectures.forEach(lec => {
-            appendLecture({
-                id: crypto.randomUUID(),
-                subject: `${lec.subjectName} | ${lec.subjectCode}`,
-                faculty: `${lec.facultyName}${lec.facultyCode ? ` | ${lec.facultyCode}` : ''}`,
-                fromTime: lec.fromTime,
-                toTime: lec.toTime,
-                students: ''
-            }, { shouldFocus: false });
-        });
-
-        toast({ title: "Lectures Autofilled", description: `${conflictingLectures.length} conflicting lectures have been added.` });
-    };
-
-    const handleStartTimeChange = (value: string, lectureIndex: number) => {
-        form.setValue(`classes.${classIndex}.lectures.${lectureIndex}.fromTime`, value, { shouldValidate: true, shouldDirty: true });
-        if (value) {
-            const [hours, minutes] = value.split(':').map(Number);
-            const startDate = new Date();
-            startDate.setHours(hours, minutes, 0, 0);
-            const endDate = addMinutes(startDate, 55);
-            const toTime = format(endDate, 'HH:mm');
-            form.setValue(`classes.${classIndex}.lectures.${lectureIndex}.toTime`, toTime, { shouldValidate: true, shouldDirty: true });
-        }
-    };
-
-    const handleCopyStudents = () => {
-        const lectures = form.getValues(`classes.${classIndex}.lectures`);
-        if (lectures && lectures.length > 1) {
-            const firstStudents = lectures[0].students;
-            for (let i = 1; i < lectures.length; i++) {
-                form.setValue(`classes.${classIndex}.lectures.${i}.students`, firstStudents, { shouldValidate: true, shouldDirty: true });
-            }
-            toast({
-                title: "Students Copied",
-                description: "The student list from the first lecture has been copied to all other lectures in this class.",
-            });
-        }
-    };
-
+const ClassAccordionItem = ({ classField, classIndex, removeClass }: { classField: any, classIndex: number, removeClass: (index: number) => void }) => {
     return (
         <AccordionItem value={classField.id} className="glass-panel-inner !border-t-0 p-4 rounded-2xl overflow-hidden">
             <AccordionTrigger className="hover:no-underline">
                 <div className="flex justify-between w-full items-center pr-4">
                     <h3 className="text-lg font-headline">
-                      {form.getValues(`classes.${classIndex}.course`)} {form.getValues(`classes.${classIndex}.program`)} - Sem {form.getValues(`classes.${classIndex}.semester`)} (Sec {form.getValues(`classes.${classIndex}.section`)})
+                      {classField.course} {classField.program} - Sem {classField.semester} (Sec {classField.section})
                     </h3>
                 </div>
             </AccordionTrigger>
             <AccordionContent className="pt-4 space-y-6">
                 <div className="border-t border-white/10 pt-6 mt-6">
-                    <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
-                        <h4 className="text-md font-headline font-semibold flex items-center"><BookOpen className="w-5 h-5 mr-2 text-primary"/>Lecture Details ({lectureFields.length})</h4>
-                    </div>
-                    
-                    <Button type="button" size="sm" className="mb-4" onClick={handleAutofill}><Bot className="w-4 h-4 mr-2" />Autofill Conflicting Lectures</Button>
-                    
-                     <p className="text-sm text-muted-foreground mb-4">The following lectures were added for this class. You can use the Autofill button to re-calculate them if event details change.</p>
+                     <p className="text-sm text-muted-foreground mb-4">This class has {classField.lectures.length} lecture(s) affected. You can view student and lecture details in the generated PDF or email.</p>
                 </div>
                 <div className="flex justify-end pt-4 mt-4 border-t border-white/10">
                     <Button type="button" variant="destructive" onClick={() => removeClass(classIndex)}><Trash2 className="w-4 h-4 mr-2"/>Remove Class</Button>
@@ -257,6 +123,8 @@ export default function DashboardPage() {
         control: form.control,
         name: "classes",
     });
+
+    const eventDetails = form.watch(['eventDate', 'eventFromTime', 'eventToTime']);
 
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -420,6 +288,11 @@ export default function DashboardPage() {
                         description: `${newClass.course} ${newClass.program} - Sem ${newClass.semester} has been added to the list.`
                     });
                 }}
+                eventDetails={{
+                  eventDate: eventDetails[0],
+                  eventFromTime: eventDetails[1],
+                  eventToTime: eventDetails[2],
+                }}
              />
             <ScrollArea className="h-screen bg-background">
                 <div className="max-w-7xl mx-auto space-y-8 pb-32 p-4 md:p-8">
@@ -555,8 +428,6 @@ export default function DashboardPage() {
                                                 classField={field} 
                                                 classIndex={index} 
                                                 removeClass={removeClass} 
-                                                control={form.control} 
-                                                form={form} 
                                             />
                                         ))}
                                     </Accordion>

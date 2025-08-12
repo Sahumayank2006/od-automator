@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm, FormProvider } from 'react-hook-form';
 import * as z from 'zod';
 import React from 'react';
-import { format, addMinutes } from 'date-fns';
+import { format, addMinutes, getDay } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -18,8 +18,10 @@ import { Combobox } from '@/components/ui/combobox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { TimetableData } from '../timetable/page';
+import { defaultTimetables } from '@/lib/timetables';
 
-import { PlusCircle, Trash2, BookOpen, Copy, Save } from 'lucide-react';
+import { PlusCircle, Trash2, BookOpen, Copy, Save, Bot } from 'lucide-react';
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -36,7 +38,7 @@ const classSchema = z.object({
   program: z.string().min(1, "Program is required."),
   semester: z.string().min(1, "Semester is required."),
   section: z.enum(["A", "B", "C", "D", "E"], { required_error: "Section is required." }),
-  lectures: z.array(lectureSchema).min(1, "At least one lecture must be added."),
+  lectures: z.array(lectureSchema),
 });
 
 type ClassFormValues = z.infer<typeof classSchema>;
@@ -60,8 +62,18 @@ const semesterOptions = Array.from({ length: 8 }, (_, i) => ({
 
 const lectureStartTimes = ["09:15", "10:15", "11:15", "12:15", "13:15", "14:15", "15:15", "16:15"];
 
+interface AddClassDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (data: ClassFormValues) => void;
+  eventDetails: {
+    eventDate?: Date;
+    eventFromTime?: string;
+    eventToTime?: string;
+  };
+}
 
-export function AddClassDialog({ open, onOpenChange, onSave }: { open: boolean, onOpenChange: (open: boolean) => void, onSave: (data: ClassFormValues) => void }) {
+export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: AddClassDialogProps) {
     const { toast } = useToast();
 
     const form = useForm<ClassFormValues>({
@@ -81,6 +93,80 @@ export function AddClassDialog({ open, onOpenChange, onSave }: { open: boolean, 
         control: form.control,
         name: "lectures"
     });
+
+    const timeToMinutes = (time: string) => {
+      if (!time || !time.includes(':')) return 0;
+      const [hours, minutes] = time.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+
+    const handleAutofill = () => {
+        const { course, program, semester, section } = form.getValues();
+        const { eventDate, eventFromTime, eventToTime } = eventDetails;
+        
+        if (!course || !program || !semester || !section) {
+            toast({ variant: 'destructive', title: "Missing Class Details", description: "Please select course, program, semester, and section." });
+            return;
+        }
+
+        if (!eventDate || !eventFromTime || !eventToTime) {
+            toast({ variant: 'destructive', title: "Missing Event Details", description: "Please provide the event date and time on the main page." });
+            return;
+        }
+
+        const storedTimetables = JSON.parse(localStorage.getItem('timetables') || '{}');
+        const allTimetables = { ...defaultTimetables, ...storedTimetables };
+        const timetableKey = `${course}-${program}-${semester}-${section}`;
+        const timetable: TimetableData = allTimetables[timetableKey];
+
+        if (!timetable) {
+            toast({ variant: 'destructive', title: "No Timetable Found", description: "A timetable for this class and section has not been created yet." });
+            return;
+        }
+
+        const eventDayIndex = (getDay(eventDate) + 6) % 7; // Monday = 0, Sunday = 6
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const eventDayName = days[eventDayIndex];
+
+        const eventStartMinutes = timeToMinutes(eventFromTime);
+        const eventEndMinutes = timeToMinutes(eventToTime);
+
+        const daySchedule = timetable.schedule[eventDayName];
+        if (!daySchedule) return;
+
+        const conflictingLectures = daySchedule.filter(lecture => {
+            if (!lecture.fromTime || !lecture.toTime || !lecture.subjectName || lecture.subjectName.toUpperCase().includes('LIBRARY') || lecture.subjectName.toUpperCase().includes('CCA')) return false;
+            
+            const lectureStartMinutes = timeToMinutes(lecture.fromTime);
+            const lectureEndMinutes = timeToMinutes(lecture.toTime);
+            
+            const overlapStart = Math.max(eventStartMinutes, lectureStartMinutes);
+            const overlapEnd = Math.min(eventEndMinutes, lectureEndMinutes);
+            const overlapDuration = overlapEnd - overlapStart;
+
+            return overlapDuration >= 15;
+        });
+
+        if (conflictingLectures.length === 0) {
+            toast({ title: "No Conflicts", description: "No lectures conflict with the specified event time for 15 minutes or more." });
+            return;
+        }
+
+        removeLecture(Array.from({length: lectureFields.length}, (_, i) => i));
+
+        conflictingLectures.forEach(lec => {
+            appendLecture({
+                id: crypto.randomUUID(),
+                subject: `${lec.subjectName} | ${lec.subjectCode}`,
+                faculty: `${lec.facultyName}${lec.facultyCode ? ` | ${lec.facultyCode}` : ''}`,
+                fromTime: lec.fromTime,
+                toTime: lec.toTime,
+                students: ''
+            }, { shouldFocus: false });
+        });
+
+        toast({ title: "Lectures Autofilled", description: `${conflictingLectures.length} conflicting lectures have been added.` });
+    };
 
     const handleStartTimeChange = (value: string, lectureIndex: number) => {
         form.setValue(`lectures.${lectureIndex}.fromTime`, value, { shouldValidate: true, shouldDirty: true });
@@ -109,6 +195,14 @@ export function AddClassDialog({ open, onOpenChange, onSave }: { open: boolean, 
     };
     
     const onSubmit = (data: ClassFormValues) => {
+        if(data.lectures.length === 0){
+             toast({
+                variant: "destructive",
+                title: "No Lectures Added",
+                description: "Please add at least one lecture or use the autofill feature.",
+            });
+            return;
+        }
         onSave(data);
         form.reset({
             id: crypto.randomUUID(),
@@ -130,7 +224,7 @@ export function AddClassDialog({ open, onOpenChange, onSave }: { open: boolean, 
                 <FormProvider {...form}>
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
-                            <div className="flex-1 overflow-y-auto pr-6">
+                            <ScrollArea className="flex-1 pr-6">
                                 <div className="space-y-6">
                                     <div className="grid md:grid-cols-3 gap-6">
                                         <FormField control={form.control} name="course" render={({ field }) => (<FormItem><FormLabel>Course Name</FormLabel><Combobox options={courseOptions} {...field} placeholder="Select course..." /><FormMessage /></FormItem>)} />
@@ -149,6 +243,8 @@ export function AddClassDialog({ open, onOpenChange, onSave }: { open: boolean, 
                                                 <Button type="button" size="sm" variant="ghost" onClick={() => appendLecture({ id: crypto.randomUUID(), subject: '', faculty: '', fromTime: '', toTime: '', students: ''})}><PlusCircle className="mr-2 h-4 w-4"/>Add Lecture</Button>
                                             </div>
                                         </div>
+
+                                        <Button type="button" size="sm" className="mb-4" onClick={handleAutofill}><Bot className="w-4 h-4 mr-2" />Autofill Conflicting Lectures</Button>
                                         
                                         <Accordion type="multiple" className="space-y-2">
                                             {lectureFields.map((lectureField, lectureIndex) => (
@@ -184,10 +280,7 @@ export function AddClassDialog({ open, onOpenChange, onSave }: { open: boolean, 
                                                         </div>
                                                         <FormField control={form.control} name={`lectures.${lectureIndex}.students`} render={({ field }) => (<FormItem><FormLabel>Student List</FormLabel><FormControl><Textarea placeholder="Enter one student per line (Name + Enrollment No.)" {...field} className="min-h-[120px]"/></FormControl><FormMessage /></FormItem>)} />
                                                         <div className="flex justify-end items-center gap-2">
-                                                            
-                                                            {lectureFields.length > 1 && (
-                                                                <Button type="button" size="sm" variant="destructive" onClick={() => removeLecture(lectureIndex)}><Trash2 className="w-4 h-4"/></Button>
-                                                            )}
+                                                            <Button type="button" size="sm" variant="destructive" onClick={() => removeLecture(lectureIndex)}><Trash2 className="w-4 h-4"/></Button>
                                                         </div>
                                                     </AccordionContent>
                                                 </AccordionItem>
@@ -196,7 +289,7 @@ export function AddClassDialog({ open, onOpenChange, onSave }: { open: boolean, 
                                         
                                     </div>
                                 </div>
-                            </div>
+                            </ScrollArea>
                             <DialogFooter className="mt-6 flex-shrink-0">
                                 <DialogClose asChild>
                                     <Button type="button" variant="secondary">Cancel</Button>
