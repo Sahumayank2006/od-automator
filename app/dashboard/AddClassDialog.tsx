@@ -218,12 +218,12 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-4xl h-[90vh] flex flex-col bg-secondary border-primary/50">
-                <DialogHeader>
+                <DialogHeader className="flex-shrink-0">
                     <DialogTitle className="text-primary text-glow">Add New Class</DialogTitle>
                 </DialogHeader>
                 <FormProvider {...form}>
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
                             <ScrollArea className="flex-1 pr-6">
                                 <div className="space-y-6">
                                     <div className="grid md:grid-cols-3 gap-6">
