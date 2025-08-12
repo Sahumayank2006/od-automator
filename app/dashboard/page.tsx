@@ -8,6 +8,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { format, addMinutes, getDay } from 'date-fns';
 import Link from 'next/link';
 import { sendEmail, extractTimetable } from './actions';
+import { AddClassDialog } from './AddClassDialog';
 
 
 import { Button } from '@/components/ui/button';
@@ -206,79 +207,20 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass, control, form
         <AccordionItem value={classField.id} className="glass-panel-inner !border-t-0 p-4 rounded-2xl overflow-hidden">
             <AccordionTrigger className="hover:no-underline">
                 <div className="flex justify-between w-full items-center pr-4">
-                    <h3 className="text-lg font-headline">Class {classIndex + 1}</h3>
+                    <h3 className="text-lg font-headline">
+                      {form.getValues(`classes.${classIndex}.course`)} {form.getValues(`classes.${classIndex}.program`)} - Sem {form.getValues(`classes.${classIndex}.semester`)} (Sec {form.getValues(`classes.${classIndex}.section`)})
+                    </h3>
                 </div>
             </AccordionTrigger>
             <AccordionContent className="pt-4 space-y-6">
-                <div className="grid md:grid-cols-3 gap-6">
-                    <FormField control={control} name={`classes.${classIndex}.course`} render={({ field }) => (<FormItem><FormLabel>Course Name</FormLabel><Combobox options={courseOptions} {...field} placeholder="Select course..." /><FormMessage /></FormItem>)} />
-                    <FormField control={control} name={`classes.${classIndex}.program`} render={({ field }) => (<FormItem><FormLabel>Program</FormLabel><Combobox options={programOptions} {...field} placeholder="Select program..." /><FormMessage /></FormItem>)} />
-                    <FormField control={control} name={`classes.${classIndex}.semester`} render={({ field }) => (<FormItem><FormLabel>Semester</FormLabel><Combobox options={semesterOptions} {...field} placeholder="Select semester..." /><FormMessage /></FormItem>)} />
-                </div>
-                <FormField control={control} name={`classes.${classIndex}.section`} render={({ field }) => (<FormItem><FormLabel>Section</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-4 pt-2">{['A', 'B', 'C', 'D', 'E'].map(sec => <FormItem key={sec} className="flex items-center space-x-2"><FormControl><RadioGroupItem value={sec} /></FormControl><FormLabel className="font-normal">{sec}</FormLabel></FormItem>)}</RadioGroup></FormControl><FormMessage /></FormItem>)} />
-                
                 <div className="border-t border-white/10 pt-6 mt-6">
                     <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
-                        <h4 className="text-md font-headline font-semibold flex items-center"><BookOpen className="w-5 h-5 mr-2 text-primary"/>Lecture Details</h4>
-                        <div className="flex gap-2">
-                           {lectureFields.length > 1 && (
-                                <Button type="button" size="sm" variant="outline" onClick={handleCopyStudents}><Copy className="mr-2 h-4 w-4"/>Copy Students</Button>
-                           )}
-                            <Button type="button" size="sm" variant="ghost" onClick={() => appendLecture({ id: crypto.randomUUID(), subject: '', faculty: '', fromTime: '', toTime: '', students: ''})}><PlusCircle className="mr-2 h-4 w-4"/>Add Lecture</Button>
-                        </div>
+                        <h4 className="text-md font-headline font-semibold flex items-center"><BookOpen className="w-5 h-5 mr-2 text-primary"/>Lecture Details ({lectureFields.length})</h4>
                     </div>
+                    
                     <Button type="button" size="sm" className="mb-4" onClick={handleAutofill}><Bot className="w-4 h-4 mr-2" />Autofill Conflicting Lectures</Button>
-                    <Accordion type="multiple" className="space-y-2">
-                        {lectureFields.map((lectureField, lectureIndex) => (
-                            <AccordionItem key={lectureField.id} value={lectureField.id} className="border bg-background/50 rounded-lg p-3">
-                                <AccordionTrigger className="hover:no-underline text-sm">Lecture {lectureIndex + 1}</AccordionTrigger>
-                                <AccordionContent className="pt-4 space-y-4">
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.subject`} render={({ field }) => (<FormItem><FormLabel>Subject Name + Code</FormLabel><FormControl><Input placeholder="e.g., Intro to CS | CS101" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                        <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.faculty`} render={({ field }) => (<FormItem><FormLabel>Faculty Name + Code</FormLabel><FormControl><Input placeholder="e.g., Dr. Alan Turing | CST01" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                        <FormField
-                                            control={control}
-                                            name={`classes.${classIndex}.lectures.${lectureIndex}.fromTime`}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>From</FormLabel>
-                                                    <Select onValueChange={(value) => handleStartTimeChange(value, lectureIndex)} defaultValue={field.value}>
-                                                        <FormControl>
-                                                            <SelectTrigger>
-                                                                <SelectValue placeholder="Select start time" />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent>
-                                                            {lectureStartTimes.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={control}
-                                            name={`classes.${classIndex}.lectures.${lectureIndex}.toTime`}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>To</FormLabel>
-                                                    <FormControl><Input type="time" {...field} readOnly className="bg-muted/50"/></FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </div>
-                                    <FormField control={control} name={`classes.${classIndex}.lectures.${lectureIndex}.students`} render={({ field }) => (<FormItem><FormLabel>Student List</FormLabel><FormControl><Textarea placeholder="Enter one student per line (Name + Enrollment No.)" {...field} className="min-h-[120px]"/></FormControl><FormMessage /></FormItem>)} />
-                                    <div className="flex justify-end items-center gap-2">
-                                        
-                                        {lectureFields.length > 1 && (
-                                            <Button type="button" size="sm" variant="destructive" onClick={() => removeLecture(lectureIndex)}><Trash2 className="w-4 h-4"/></Button>
-                                        )}
-                                    </div>
-                                </AccordionContent>
-                            </AccordionItem>
-                        ))}
-                    </Accordion>
+                    
+                     <p className="text-sm text-muted-foreground mb-4">The following lectures were added for this class. You can use the Autofill button to re-calculate them if event details change.</p>
                 </div>
                 <div className="flex justify-end pt-4 mt-4 border-t border-white/10">
                     <Button type="button" variant="destructive" onClick={() => removeClass(classIndex)}><Trash2 className="w-4 h-4 mr-2"/>Remove Class</Button>
@@ -293,6 +235,7 @@ export default function DashboardPage() {
     const [isSending, setIsSending] = useState(false);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     const [isExtracting, setIsExtracting] = useState(false);
+    const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const form = useForm<ODFormValues>({
@@ -467,6 +410,17 @@ export default function DashboardPage() {
     
     return (
         <FormProvider {...form}>
+             <AddClassDialog
+                open={isAddClassModalOpen}
+                onOpenChange={setIsAddClassModalOpen}
+                onSave={(newClass) => {
+                    appendClass(newClass);
+                    toast({
+                        title: "Class Added",
+                        description: `${newClass.course} ${newClass.program} - Sem ${newClass.semester} has been added to the list.`
+                    });
+                }}
+             />
             <ScrollArea className="h-screen bg-background">
                 <div className="max-w-7xl mx-auto space-y-8 pb-32 p-4 md:p-8">
                     <header className="flex flex-wrap items-center justify-between gap-4 py-4">
@@ -606,8 +560,14 @@ export default function DashboardPage() {
                                             />
                                         ))}
                                     </Accordion>
+                                    {classFields.length === 0 && (
+                                        <div className="text-center py-8 text-muted-foreground">
+                                            <p>No classes added yet.</p>
+                                            <p className="text-sm">Click the button below to add a class involved in the event.</p>
+                                        </div>
+                                    )}
 
-                                    <Button type="button" variant="outline" onClick={() => appendClass({ id: crypto.randomUUID(), course: '', program: '', semester: '', section: 'A', lectures: [] })}>
+                                    <Button type="button" variant="outline" onClick={() => setIsAddClassModalOpen(true)}>
                                         <PlusCircle className="mr-2 h-4 w-4" />
                                         Add Class
                                     </Button>
@@ -630,5 +590,3 @@ export default function DashboardPage() {
         </FormProvider>
     );
 }
-
-    
