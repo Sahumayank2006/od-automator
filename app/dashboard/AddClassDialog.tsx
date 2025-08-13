@@ -222,73 +222,73 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
                     <DialogTitle className="text-primary text-glow">Add New Class</DialogTitle>
                 </DialogHeader>
                 <FormProvider {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
-                        <ScrollArea className="flex-1 pr-6">
-                            <div className="space-y-6">
-                                <div className="grid md:grid-cols-3 gap-6">
-                                    <FormField control={form.control} name="course" render={({ field }) => (<FormItem><FormLabel>Course Name</FormLabel><Combobox options={courseOptions} {...field} placeholder="Select course..." /><FormMessage /></FormItem>)} />
-                                    <FormField control={form.control} name="program" render={({ field }) => (<FormItem><FormLabel>Program</FormLabel><Combobox options={programOptions} {...field} placeholder="Select program..." /><FormMessage /></FormItem>)} />
-                                    <FormField control={form.control} name="semester" render={({ field }) => (<FormItem><FormLabel>Semester</FormLabel><Combobox options={semesterOptions} {...field} placeholder="Select semester..." /><FormMessage /></FormItem>)} />
-                                </div>
-                                <FormField control={form.control} name="section" render={({ field }) => (<FormItem><FormLabel>Section</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-4 pt-2">{['A', 'B', 'C', 'D', 'E'].map(sec => <FormItem key={sec} className="flex items-center space-x-2"><FormControl><RadioGroupItem value={sec} /></FormControl><FormLabel className="font-normal">{sec}</FormLabel></FormItem>)}</RadioGroup></FormControl><FormMessage /></FormItem>)} />
-                                
-                                <div className="border-t border-white/10 pt-6 mt-6">
-                                    <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
-                                        <h4 className="text-md font-headline font-semibold flex items-center"><BookOpen className="w-5 h-5 mr-2 text-primary"/>Lecture Details</h4>
-                                        <div className="flex gap-2">
-                                        {lectureFields.length > 1 && (
-                                                <Button type="button" size="sm" variant="outline" onClick={handleCopyStudents}><Copy className="mr-2 h-4 w-4"/>Copy Students</Button>
-                                        )}
-                                            <Button type="button" size="sm" variant="ghost" onClick={() => appendLecture({ id: crypto.randomUUID(), subject: '', faculty: '', fromTime: '', toTime: '', students: ''})}><PlusCircle className="mr-2 h-4 w-4"/>Add Lecture</Button>
-                                        </div>
-                                    </div>
-
-                                    <Button type="button" size="sm" className="mb-4" onClick={handleAutofill}><Bot className="w-4 h-4 mr-2" />Autofill Conflicting Lectures</Button>
-                                    
-                                    <Accordion type="multiple" className="space-y-2">
-                                        {lectureFields.map((lectureField, lectureIndex) => (
-                                            <AccordionItem key={lectureField.id} value={lectureField.id} className="border bg-background/50 rounded-lg p-3">
-                                                <AccordionTrigger className="hover:no-underline text-sm">Lecture {lectureIndex + 1}</AccordionTrigger>
-                                                <AccordionContent className="pt-4 space-y-4">
-                                                    <div className="grid md:grid-cols-2 gap-4">
-                                                        <FormField control={form.control} name={`lectures.${lectureIndex}.subject`} render={({ field }) => (<FormItem><FormLabel>Subject Name + Code</FormLabel><FormControl><Input placeholder="e.g., Intro to CS | CS101" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                                        <FormField control={form.control} name={`lectures.${lectureIndex}.faculty`} render={({ field }) => (<FormItem><FormLabel>Faculty Name + Code</FormLabel><FormControl><Input placeholder="e.g., Dr. Alan Turing | CST01" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                                        <FormField control={form.control} name={`lectures.${lectureIndex}.fromTime`} render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>From</FormLabel>
-                                                                <Select onValueChange={(value) => handleStartTimeChange(value, lectureIndex)} defaultValue={field.value}>
-                                                                    <FormControl>
-                                                                        <SelectTrigger>
-                                                                            <SelectValue placeholder="Select start time" />
-                                                                        </SelectTrigger>
-                                                                    </FormControl>
-                                                                    <SelectContent>
-                                                                        {lectureStartTimes.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}
-                                                                    </SelectContent>
-                                                                </Select>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}/>
-                                                        <FormField control={form.control} name={`lectures.${lectureIndex}.toTime`} render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>To</FormLabel>
-                                                                <FormControl><Input type="time" {...field} readOnly className="bg-muted/50"/></FormControl>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}/>
-                                                    </div>
-                                                    <FormField control={form.control} name={`lectures.${lectureIndex}.students`} render={({ field }) => (<FormItem><FormLabel>Student List</FormLabel><FormControl><Textarea placeholder="Enter one student per line (Name + Enrollment No.)" {...field} className="min-h-[120px]"/></FormControl><FormMessage /></FormItem>)} />
-                                                    <div className="flex justify-end items-center gap-2">
-                                                        <Button type="button" size="sm" variant="destructive" onClick={() => removeLecture(lectureIndex)}><Trash2 className="w-4 h-4"/></Button>
-                                                    </div>
-                                                </AccordionContent>
-                                            </AccordionItem>
-                                        ))}
-                                    </Accordion>
-                                    
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0 overflow-y-hidden">
+                        <div className="space-y-6 px-1 pb-4">
+                            <div className="grid md:grid-cols-3 gap-6">
+                                <FormField control={form.control} name="course" render={({ field }) => (<FormItem><FormLabel>Course Name</FormLabel><Combobox options={courseOptions} {...field} placeholder="Select course..." /><FormMessage /></FormItem>)} />
+                                <FormField control={form.control} name="program" render={({ field }) => (<FormItem><FormLabel>Program</FormLabel><Combobox options={programOptions} {...field} placeholder="Select program..." /><FormMessage /></FormItem>)} />
+                                <FormField control={form.control} name="semester" render={({ field }) => (<FormItem><FormLabel>Semester</FormLabel><Combobox options={semesterOptions} {...field} placeholder="Select semester..." /><FormMessage /></FormItem>)} />
+                            </div>
+                            <FormField control={form.control} name="section" render={({ field }) => (<FormItem><FormLabel>Section</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-4 pt-2">{['A', 'B', 'C', 'D', 'E'].map(sec => <FormItem key={sec} className="flex items-center space-x-2"><FormControl><RadioGroupItem value={sec} /></FormControl><FormLabel className="font-normal">{sec}</FormLabel></FormItem>)}</RadioGroup></FormControl><FormMessage /></FormItem>)} />
+                        </div>
+                        
+                        <div className="border-t border-white/10 pt-6 mt-6 flex-1 flex flex-col min-h-0">
+                            <div className="flex flex-wrap justify-between items-center mb-4 gap-2 px-1">
+                                <h4 className="text-md font-headline font-semibold flex items-center"><BookOpen className="w-5 h-5 mr-2 text-primary"/>Lecture Details</h4>
+                                <div className="flex gap-2">
+                                {lectureFields.length > 1 && (
+                                        <Button type="button" size="sm" variant="outline" onClick={handleCopyStudents}><Copy className="mr-2 h-4 w-4"/>Copy Students</Button>
+                                )}
+                                    <Button type="button" size="sm" variant="ghost" onClick={() => appendLecture({ id: crypto.randomUUID(), subject: '', faculty: '', fromTime: '', toTime: '', students: ''})}><PlusCircle className="mr-2 h-4 w-4"/>Add Lecture</Button>
                                 </div>
                             </div>
-                        </ScrollArea>
+
+                            <Button type="button" size="sm" className="mb-4 mx-1" onClick={handleAutofill}><Bot className="w-4 h-4 mr-2" />Autofill Conflicting Lectures</Button>
+                            
+                            <ScrollArea className="flex-1 pr-6">
+                                <Accordion type="multiple" className="space-y-2 pr-1">
+                                    {lectureFields.map((lectureField, lectureIndex) => (
+                                        <AccordionItem key={lectureField.id} value={lectureField.id} className="border bg-background/50 rounded-lg p-3">
+                                            <AccordionTrigger className="hover:no-underline text-sm">Lecture {lectureIndex + 1}</AccordionTrigger>
+                                            <AccordionContent className="pt-4 space-y-4">
+                                                <div className="grid md:grid-cols-2 gap-4">
+                                                    <FormField control={form.control} name={`lectures.${lectureIndex}.subject`} render={({ field }) => (<FormItem><FormLabel>Subject Name + Code</FormLabel><FormControl><Input placeholder="e.g., Intro to CS | CS101" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                                    <FormField control={form.control} name={`lectures.${lectureIndex}.faculty`} render={({ field }) => (<FormItem><FormLabel>Faculty Name + Code</FormLabel><FormControl><Input placeholder="e.g., Dr. Alan Turing | CST01" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                                    <FormField control={form.control} name={`lectures.${lectureIndex}.fromTime`} render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>From</FormLabel>
+                                                            <Select onValueChange={(value) => handleStartTimeChange(value, lectureIndex)} defaultValue={field.value}>
+                                                                <FormControl>
+                                                                    <SelectTrigger>
+                                                                        <SelectValue placeholder="Select start time" />
+                                                                    </SelectTrigger>
+                                                                </FormControl>
+                                                                <SelectContent>
+                                                                    {lectureStartTimes.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}
+                                                                </SelectContent>
+                                                            </Select>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}/>
+                                                    <FormField control={form.control} name={`lectures.${lectureIndex}.toTime`} render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>To</FormLabel>
+                                                            <FormControl><Input type="time" {...field} readOnly className="bg-muted/50"/></FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}/>
+                                                </div>
+                                                <FormField control={form.control} name={`lectures.${lectureIndex}.students`} render={({ field }) => (<FormItem><FormLabel>Student List</FormLabel><FormControl><Textarea placeholder="Enter one student per line (Name + Enrollment No.)" {...field} className="min-h-[120px]"/></FormControl><FormMessage /></FormItem>)} />
+                                                <div className="flex justify-end items-center gap-2">
+                                                    <Button type="button" size="sm" variant="destructive" onClick={() => removeLecture(lectureIndex)}><Trash2 className="w-4 h-4"/></Button>
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    ))}
+                                </Accordion>
+                            </ScrollArea>
+                        </div>
+
                         <DialogFooter className="mt-auto pt-4 flex-shrink-0 pr-6 border-t border-white/10">
                             <DialogClose asChild>
                                 <Button type="button" variant="secondary">Cancel</Button>
