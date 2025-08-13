@@ -222,7 +222,7 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
                     <DialogTitle className="text-primary text-glow">Add New Class</DialogTitle>
                 </DialogHeader>
                 <FormProvider {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0 overflow-y-hidden">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
                         <div className="space-y-6 px-1 pb-4">
                             <div className="grid md:grid-cols-3 gap-6">
                                 <FormField control={form.control} name="course" render={({ field }) => (<FormItem><FormLabel>Course Name</FormLabel><Combobox options={courseOptions} {...field} placeholder="Select course..." /><FormMessage /></FormItem>)} />
@@ -233,7 +233,7 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
                         </div>
                         
                         <div className="border-t border-white/10 pt-6 mt-6 flex-1 flex flex-col min-h-0">
-                            <div className="flex flex-wrap justify-between items-center mb-4 gap-2 px-1">
+                            <div className="flex flex-wrap justify-between items-center mb-4 gap-2 px-1 flex-shrink-0">
                                 <h4 className="text-md font-headline font-semibold flex items-center"><BookOpen className="w-5 h-5 mr-2 text-primary"/>Lecture Details</h4>
                                 <div className="flex gap-2">
                                 {lectureFields.length > 1 && (
@@ -243,7 +243,7 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
                                 </div>
                             </div>
 
-                            <Button type="button" size="sm" className="mb-4 mx-1" onClick={handleAutofill}><Bot className="w-4 h-4 mr-2" />Autofill Conflicting Lectures</Button>
+                            <Button type="button" size="sm" className="mb-4 mx-1 flex-shrink-0" onClick={handleAutofill}><Bot className="w-4 h-4 mr-2" />Autofill Conflicting Lectures</Button>
                             
                             <ScrollArea className="flex-1 pr-6">
                                 <Accordion type="multiple" className="space-y-2 pr-1">
@@ -289,7 +289,7 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
                             </ScrollArea>
                         </div>
 
-                        <DialogFooter className="mt-auto pt-4 flex-shrink-0 pr-6 border-t border-white/10">
+                        <DialogFooter className="mt-4 pt-4 flex-shrink-0 border-t border-white/10">
                             <DialogClose asChild>
                                 <Button type="button" variant="secondary">Cancel</Button>
                             </DialogClose>
