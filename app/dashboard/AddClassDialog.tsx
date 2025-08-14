@@ -224,26 +224,26 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
                     </DialogHeader>
                     <FormProvider {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
-                            <ScrollArea className="flex-1 pr-6 -mr-6">
-                                <div className="space-y-6 px-1 pb-4">
-                                    <div className="grid md:grid-cols-3 gap-6">
-                                        <FormField control={form.control} name="course" render={({ field }) => (<FormItem><FormLabel>Course Name</FormLabel><Combobox options={courseOptions} {...field} placeholder="Select course..." /><FormMessage /></FormItem>)} />
-                                        <FormField control={form.control} name="program" render={({ field }) => (<FormItem><FormLabel>Program</FormLabel><Combobox options={programOptions} {...field} placeholder="Select program..." /><FormMessage /></FormItem>)} />
-                                        <FormField control={form.control} name="semester" render={({ field }) => (<FormItem><FormLabel>Semester</FormLabel><Combobox options={semesterOptions} {...field} placeholder="Select semester..." /><FormMessage /></FormItem>)} />
-                                    </div>
-                                    <FormField control={form.control} name="section" render={({ field }) => (<FormItem><FormLabel>Section</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-4 pt-2">{['A', 'B', 'C', 'D', 'E'].map(sec => <FormItem key={sec} className="flex items-center space-x-2"><FormControl><RadioGroupItem value={sec} /></FormControl><FormLabel className="font-normal">{sec}</FormLabel></FormItem>)}</RadioGroup></FormControl><FormMessage /></FormItem>)} />
+                            <div className="flex-shrink-0 space-y-6 px-1 pb-4">
+                                <div className="grid md:grid-cols-3 gap-6">
+                                    <FormField control={form.control} name="course" render={({ field }) => (<FormItem><FormLabel>Course Name</FormLabel><Combobox options={courseOptions} {...field} placeholder="Select course..." /><FormMessage /></FormItem>)} />
+                                    <FormField control={form.control} name="program" render={({ field }) => (<FormItem><FormLabel>Program</FormLabel><Combobox options={programOptions} {...field} placeholder="Select program..." /><FormMessage /></FormItem>)} />
+                                    <FormField control={form.control} name="semester" render={({ field }) => (<FormItem><FormLabel>Semester</FormLabel><Combobox options={semesterOptions} {...field} placeholder="Select semester..." /><FormMessage /></FormItem>)} />
                                 </div>
-                                
-                                <div className="border-t border-white/10 pt-6 mt-6 px-1">
-                                    <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
-                                        <h4 className="text-md font-headline font-semibold flex items-center"><BookOpen className="w-5 h-5 mr-2 text-primary"/>Affected Lectures</h4>
-                                        <div className="flex gap-2">
-                                            <Button type="button" size="sm" onClick={handleAutofill}><Bot className="w-4 h-4 mr-2" />Autofill Conflicts</Button>
-                                            <Button type="button" size="sm" variant="ghost" onClick={handleAddNewLecture}><PlusCircle className="mr-2 h-4 w-4"/>Add New Lecture</Button>
-                                        </div>
+                                <FormField control={form.control} name="section" render={({ field }) => (<FormItem><FormLabel>Section</FormLabel><FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-4 pt-2">{['A', 'B', 'C', 'D', 'E'].map(sec => <FormItem key={sec} className="flex items-center space-x-2"><FormControl><RadioGroupItem value={sec} /></FormControl><FormLabel className="font-normal">{sec}</FormLabel></FormItem>)}</RadioGroup></FormControl><FormMessage /></FormItem>)} />
+                            </div>
+                            
+                            <div className="flex-1 flex flex-col min-h-0 border-t border-white/10 pt-6 mt-6 px-1">
+                                <div className="flex flex-wrap justify-between items-center mb-4 gap-2 flex-shrink-0">
+                                    <h4 className="text-md font-headline font-semibold flex items-center"><BookOpen className="w-5 h-5 mr-2 text-primary"/>Affected Lectures</h4>
+                                    <div className="flex gap-2">
+                                        <Button type="button" size="sm" onClick={handleAutofill}><Bot className="w-4 h-4 mr-2" />Autofill Conflicts</Button>
+                                        <Button type="button" size="sm" variant="ghost" onClick={handleAddNewLecture}><PlusCircle className="mr-2 h-4 w-4"/>Add New Lecture</Button>
                                     </div>
+                                </div>
 
-                                    <div className="space-y-3 pr-1">
+                                <ScrollArea className="flex-1 -mr-4 pr-4">
+                                    <div className="space-y-3">
                                         {lectures.length === 0 ? (
                                             <div className="text-center py-8 text-muted-foreground bg-background/30 rounded-lg">
                                                 <p>No lectures added yet.</p>
@@ -264,9 +264,10 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
                                             ))
                                         )}
                                     </div>
-                                </div>
-                            </ScrollArea>
-                            <DialogFooter className="flex-shrink-0 pt-4 border-t border-white/10">
+                                </ScrollArea>
+                            </div>
+
+                            <DialogFooter className="flex-shrink-0 pt-4 border-t border-white/10 mt-4">
                                 <DialogClose asChild>
                                     <Button type="button" variant="secondary">Cancel</Button>
                                 </DialogClose>
@@ -279,3 +280,5 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
         </>
     );
 }
+
+    
