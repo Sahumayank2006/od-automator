@@ -4,7 +4,6 @@ import nodemailer from 'nodemailer';
 import { render } from '@react-email/render';
 import { ODRequestEmail } from '@/emails/od-request';
 import type { ODFormValues } from './page';
-import { extractTimetableFlow } from '@/ai/flows/extract-timetable-flow';
 
 export async function sendEmail(data: ODFormValues) {
   const transporter = nodemailer.createTransport({
@@ -36,11 +35,4 @@ export async function sendEmail(data: ODFormValues) {
     }
     return { success: false, error: 'An unknown error occurred while sending the email.' };
   }
-}
-
-export async function extractTimetable(data: string) {
-    const result = await extractTimetableFlow({
-        image: data,
-    });
-    return result;
 }

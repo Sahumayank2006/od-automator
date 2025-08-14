@@ -7,7 +7,7 @@ import * as z from 'zod';
 import React, { useState, useRef } from 'react';
 import { format } from 'date-fns';
 import Link from 'next/link';
-import { sendEmail, extractTimetable } from './actions';
+import { sendEmail } from './actions';
 import { AddClassDialog } from './AddClassDialog';
 import { Loader2 } from 'lucide-react';
 
@@ -22,7 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, User, Building, LogOut, GraduationCap, Table, Upload } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, User, Building, LogOut, GraduationCap, Table } from 'lucide-react';
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -94,10 +94,8 @@ export default function DashboardPage() {
     const { toast } = useToast();
     const [isSending, setIsSending] = useState(false);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-    const [isExtracting, setIsExtracting] = useState(false);
     const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
+    
     const form = useForm<ODFormValues>({
         resolver: zodResolver(odFormSchema),
         defaultValues: {
@@ -120,36 +118,6 @@ export default function DashboardPage() {
 
     const eventDetails = form.watch(['eventDate', 'eventFromTime', 'eventToTime']);
 
-    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        setIsExtracting(true);
-        toast({ title: 'Processing Timetable', description: 'Please wait while we extract the data...' });
-
-        try {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = async () => {
-                const base64Image = reader.result as string;
-                const result = await extractTimetable(base64Image);
-
-                // Update form fields with extracted data
-                form.reset({ ...form.getValues(), ...result });
-                
-                toast({ title: 'Timetable Imported', description: 'Data has been extracted and filled into the form.' });
-            };
-        } catch (error) {
-            console.error("Error during timetable extraction:", error);
-            toast({ variant: 'destructive', title: 'Extraction Failed', description: error instanceof Error ? error.message : 'An unknown error occurred.' });
-        } finally {
-            setIsExtracting(false);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-            }
-        }
-    };
-    
     const handleGeneratePdf = async (data: ODFormValues) => {
         setIsGeneratingPdf(true);
         const { default: jsPDF } = await import('jspdf');
@@ -290,25 +258,6 @@ export default function DashboardPage() {
                             <h1 className="text-2xl font-headline font-bold text-foreground">OD Automator</h1>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
-                             <Button
-                                variant="outline"
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={isExtracting}
-                            >
-                                {isExtracting ? (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                ) : (
-                                    <Upload className="w-4 h-4 mr-2" />
-                                )}
-                                Import Timetable
-                            </Button>
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleFileChange}
-                                className="hidden"
-                                accept="image/*,application/pdf"
-                            />
                             <Link href="/timetable" passHref>
                                 <Button variant="outline">
                                     <Table className="w-4 h-4 mr-2"/>

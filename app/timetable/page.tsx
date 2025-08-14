@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import Link from 'next/link';
-import { Home, Save, GraduationCap, Calendar, BookOpen, User, Tag, PlusCircle, Upload, Loader2 } from 'lucide-react';
+import { Home, Save, GraduationCap, Calendar, BookOpen, User, Tag, PlusCircle } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
@@ -17,7 +17,6 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Combobox } from '@/components/ui/combobox';
 import { defaultTimetables } from '@/lib/timetables';
-import { extractTimetable } from '../dashboard/actions'; // Assuming the action is in the dashboard folder
 
 const lectureFormSchema = z.object({
   subjectName: z.string().min(1, 'Subject name is required.'),
@@ -172,8 +171,6 @@ export default function TimetablePage() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedLecture, setSelectedLecture] = useState<{ day: string, lectureId: string } | null>(null);
     const [allTimetables, setAllTimetables] = useState<Record<string, TimetableData>>({});
-    const [isExtracting, setIsExtracting] = useState(false);
-    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         try {
@@ -249,42 +246,6 @@ export default function TimetablePage() {
         toast({ title: "Timetable Saved!", description: "The timetable has been saved to your browser's local storage." });
     };
 
-    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        setIsExtracting(true);
-        toast({ title: 'Processing Timetable', description: 'Please wait while we extract the data...' });
-
-        try {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = async () => {
-                const base64Image = reader.result as string;
-                const result = await extractTimetable(base64Image);
-                
-                // Merge the extracted schedule with the existing one
-                const newTimetable = { ...selectedClass, schedule: result.schedule };
-                const key = `${selectedClass.course}-${selectedClass.program}-${selectedClass.semester}-${selectedClass.section}`;
-                const updatedTimetables = { ...allTimetables, [key]: newTimetable };
-                
-                localStorage.setItem('timetables', JSON.stringify(updatedTimetables));
-                setAllTimetables(updatedTimetables);
-                setTimetable(newTimetable);
-                
-                toast({ title: 'Timetable Imported & Saved', description: 'Data has been extracted and saved successfully.' });
-            };
-        } catch (error) {
-            console.error("Error during timetable extraction:", error);
-            toast({ variant: 'destructive', title: 'Extraction Failed', description: error instanceof Error ? error.message : 'An unknown error occurred.' });
-        } finally {
-            setIsExtracting(false);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-            }
-        }
-    };
-
     const getCurrentLecture = () => {
         if (!timetable || !selectedLecture) {
             return { id: '', fromTime: '', toTime: '' };
@@ -302,26 +263,7 @@ export default function TimetablePage() {
                             <h1 className="text-2xl font-headline font-bold text-foreground">Timetable Manager</h1>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
-                            <Button
-                                variant="outline"
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={isExtracting}
-                            >
-                                {isExtracting ? (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                ) : (
-                                    <Upload className="w-4 h-4 mr-2" />
-                                )}
-                                Import Timetable
-                            </Button>
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleFileChange}
-                                className="hidden"
-                                accept="image/*,application/pdf"
-                            />
-                            <Button onClick={handleSaveTimetable} disabled={isExtracting}><Save className="mr-2 h-4 w-4"/>Save Timetable</Button>
+                            <Button onClick={handleSaveTimetable}><Save className="mr-2 h-4 w-4"/>Save Timetable</Button>
                             <Link href="/dashboard" passHref>
                                 <Button variant="ghost">
                                     <Home className="w-4 h-4 mr-2"/>
