@@ -4,31 +4,25 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm, FormProvider } from 'react-hook-form';
 import * as z from 'zod';
-import React, { useEffect, useState, useRef } from 'react';
-import { format, addMinutes, getDay } from 'date-fns';
+import React, { useState, useRef } from 'react';
+import { format } from 'date-fns';
 import Link from 'next/link';
 import { sendEmail, extractTimetable } from './actions';
 import { AddClassDialog } from './AddClassDialog';
+import { Loader2 } from 'lucide-react';
 
 
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Combobox } from '@/components/ui/combobox';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, Bot, User, Building, BookOpen, LogOut, GraduationCap, Copy, Table, Upload } from 'lucide-react';
-import type { TimetableData } from '../timetable/page';
-import { defaultTimetables } from '@/lib/timetables';
-import { Loader2 } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, User, Building, LogOut, GraduationCap, Table, Upload } from 'lucide-react';
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -85,7 +79,7 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass }: { classFiel
                 </div>
             </AccordionTrigger>
             <AccordionContent className="pt-4 space-y-6">
-                <div className="border-t border-white/10 pt-6 mt-6">
+                <div className="border-t border-white/10 pt-6">
                      <p className="text-sm text-muted-foreground mb-4">This class has {classField.lectures.length} lecture(s) affected. You can view student and lecture details in the generated PDF or email.</p>
                 </div>
                 <div className="flex justify-end pt-4 mt-4 border-t border-white/10">
@@ -150,7 +144,6 @@ export default function DashboardPage() {
             toast({ variant: 'destructive', title: 'Extraction Failed', description: error instanceof Error ? error.message : 'An unknown error occurred.' });
         } finally {
             setIsExtracting(false);
-            // Reset file input so the same file can be selected again
             if (fileInputRef.current) {
                 fileInputRef.current.value = "";
             }
@@ -165,13 +158,11 @@ export default function DashboardPage() {
         const doc = new (jsPDF as any)();
         let yPos = 45;
     
-        // Add content to the PDF
         doc.setFontSize(20);
         doc.text("Amity University", 105, 20, { align: 'center' });
         doc.setFontSize(16);
         doc.text("On-Duty Application Form", 105, 30, { align: 'center' });
     
-        // Faculty Coordinator Details
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         doc.text("Faculty Coordinator Information", 14, yPos);
@@ -186,7 +177,6 @@ export default function DashboardPage() {
         });
         yPos = doc.lastAutoTable.finalY + 10;
     
-        // Event Details
         doc.setFont('helvetica', 'bold');
         doc.text("Event Information", 14, yPos);
         yPos += 7;
@@ -206,7 +196,6 @@ export default function DashboardPage() {
         });
         yPos = doc.lastAutoTable.finalY + 10;
     
-        // Classes and Lectures
         doc.setFont('helvetica', 'bold');
         doc.text("Affected Classes & Lectures", 14, yPos);
         yPos += 7;
@@ -229,7 +218,6 @@ export default function DashboardPage() {
             });
             yPos = doc.lastAutoTable.finalY + 5;
             
-            // Student List per Lecture
             classInfo.lectures.forEach((lecture) => {
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'bold');
