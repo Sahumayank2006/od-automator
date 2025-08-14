@@ -288,7 +288,6 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
                                 </Accordion>
                             </div>
                         </ScrollArea>
-
                         <DialogFooter className="flex-shrink-0 pt-4 border-t border-white/10">
                             <DialogClose asChild>
                                 <Button type="button" variant="secondary">Cancel</Button>
