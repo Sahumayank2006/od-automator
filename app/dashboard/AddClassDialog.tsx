@@ -137,11 +137,11 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
             const overlapEnd = Math.min(eventEndMinutes, lectureEndMinutes);
             const overlapDuration = overlapEnd - overlapStart;
 
-            return overlapDuration > 0;
+            return overlapDuration >= 15;
         });
 
         if (conflictingLectures.length === 0) {
-            toast({ title: "No Conflicts", description: "No lectures conflict with the specified event time." });
+            toast({ title: "No Conflicts", description: "No lectures conflict with the specified event time for 15 minutes or more." });
             return;
         }
 
