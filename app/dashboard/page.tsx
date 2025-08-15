@@ -23,7 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, User, Building, LogOut, GraduationCap, Table } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, User, Building, LogOut, GraduationCap, Table, ShieldCheck, BarChart3 } from 'lucide-react';
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -282,16 +282,16 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
                             <Link href="/timetable" passHref>
-                                <Button variant="outline">
-                                    <Table className="w-4 h-4 mr-2"/>
-                                    Manage Timetable
-                                </Button>
+                                <Button variant="outline"><Table className="w-4 h-4 mr-2"/>Manage Timetable</Button>
+                            </Link>
+                             <Link href="/faculty" passHref>
+                                <Button variant="outline"><ShieldCheck className="w-4 h-4 mr-2"/>Faculty Admin</Button>
+                            </Link>
+                             <Link href="/events" passHref>
+                                <Button variant="outline"><BarChart3 className="w-4 h-4 mr-2"/>Event Status</Button>
                             </Link>
                             <Link href="/" passHref>
-                                <Button variant="ghost">
-                                    <LogOut className="w-4 h-4 mr-2"/>
-                                    Sign Out
-                                </Button>
+                                <Button variant="ghost"><LogOut className="w-4 h-4 mr-2"/>Sign Out</Button>
                             </Link>
                         </div>
                     </header>
