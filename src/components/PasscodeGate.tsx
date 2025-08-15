@@ -18,6 +18,7 @@ export function PasscodeGate({ children }: PasscodeGateProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passcode, setPasscode] = useState('');
 
+  // Correctly read the environment variable for client-side components
   const correctPasscode = process.env.NEXT_PUBLIC_FACULTY_PASSCODE || '123456';
 
   useEffect(() => {
