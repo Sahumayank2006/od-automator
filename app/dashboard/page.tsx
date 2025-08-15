@@ -125,12 +125,6 @@ export default function DashboardPage() {
         await import('jspdf-autotable');
 
         try {
-            const dbResponse = await saveOdRequest(data);
-            if (!dbResponse.success) {
-                throw new Error(dbResponse.error);
-            }
-            toast({ title: "Request Saved", description: "Your OD request has been saved to the database." });
-
             const doc = new (jsPDF as any)();
             let yPos = 45;
         
@@ -214,10 +208,10 @@ export default function DashboardPage() {
         
             doc.save(`OD_Application_${data.eventName.replace(/ /g, '_')}.pdf`);
         } catch (error) {
-            console.error("Error generating PDF or saving data:", error);
+            console.error("Error generating PDF:", error);
             toast({
                 variant: "destructive",
-                title: "Error",
+                title: "Error Generating PDF",
                 description: error instanceof Error ? error.message : "An unknown error occurred.",
             });
         } finally {
@@ -408,7 +402,7 @@ export default function DashboardPage() {
                             <div className="flex justify-end space-x-4">
                                 <Button type="button" variant="secondary" onClick={() => form.reset()}>Clear Form</Button>
                                 <Button type="button" disabled={isGeneratingPdf || isSending} onClick={form.handleSubmit(handleGeneratePdf)}>
-                                    {isGeneratingPdf ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : <><FileText className="mr-2 h-4 w-4" />Generate PDF & Save</>}
+                                    {isGeneratingPdf ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : <><FileText className="mr-2 h-4 w-4" />Generate PDF</>}
                                 </Button>
                                 <Button type="button" disabled={isSending || isGeneratingPdf} onClick={form.handleSubmit(handleSendEmail)}>
                                     {isSending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending...</> : <><Mail className="mr-2 h-4 w-4" />Send Email & Save</>}

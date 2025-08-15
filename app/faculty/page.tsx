@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getAllOdRequests, updateOdRequestStatus, ODRequest, ODRequestStatus } from '@/lib/database';
-import { Loader2, ShieldCheck, Home, Check, X, Info, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, ShieldCheck, Home, Check, X, Info, Clock, CheckCircle, XCircle, FileText, Send, User, Mail } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import {
@@ -18,6 +18,9 @@ import {
 } from "@/components/ui/accordion"
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const StatusBadge = ({ status }: { status: ODRequestStatus }) => {
     const statusStyles = {
@@ -38,6 +41,47 @@ const StatusBadge = ({ status }: { status: ODRequestStatus }) => {
         </Badge>
     );
 };
+
+const RequestDetailsDialog = ({ request }: { request: ODRequest }) => {
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm"><FileText className="w-4 h-4 mr-2" />View Details</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl h-[90vh] flex flex-col bg-secondary border-primary/50">
+                <DialogHeader>
+                    <DialogTitle className="text-primary text-glow">OD Request Details</DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="flex-1 -mr-4 pr-4">
+                    <div className="space-y-6">
+                        <div>
+                            <h3 className="font-headline font-semibold mb-2">Event: {request.eventName}</h3>
+                            <p className="text-sm text-muted-foreground">Date: {format(request.eventDate, 'PPP')} ({request.eventFromTime} - {request.eventToTime})</p>
+                            <p className="text-sm text-muted-foreground">Coordinator: {request.facultyCoordinatorName} ({request.facultyCoordinatorEmail})</p>
+                        </div>
+
+                        {request.classes.map(classInfo => (
+                            <div key={classInfo.id} className="glass-panel-inner p-4 rounded-xl">
+                                <h4 className="font-headline font-semibold mb-3 pb-2 border-b border-white/10">
+                                    {classInfo.course} {classInfo.program} - Sem {classInfo.semester} (Sec {classInfo.section})
+                                </h4>
+                                {classInfo.lectures.map(lecture => (
+                                    <div key={lecture.id} className="mb-4">
+                                        <p className="font-semibold text-sm">{lecture.subject}</p>
+                                        <p className="text-xs text-muted-foreground mb-2">{lecture.faculty} &bull; {lecture.fromTime} - {lecture.toTime}</p>
+                                        <div className="bg-background/30 rounded-lg p-2 max-h-48 overflow-y-auto">
+                                            <p className="text-xs whitespace-pre-wrap font-mono">{lecture.students}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                </ScrollArea>
+            </DialogContent>
+        </Dialog>
+    )
+}
 
 function FacultyAdminPage() {
     const { toast } = useToast();
@@ -131,7 +175,25 @@ function FacultyAdminPage() {
                                             </ul>
                                         </div>
                                         
+                                        <div className="border-t border-white/10 pt-6">
+                                            <h4 className="font-headline font-semibold mb-4">Forward to Higher Authority</h4>
+                                            <div className="grid md:grid-cols-2 gap-4 mb-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor={`fwd-name-${req.id}`} className="flex items-center text-xs"><User className="w-3 h-3 mr-2" />Recipient Name</Label>
+                                                    <Input id={`fwd-name-${req.id}`} placeholder="e.g. Dr. John Smith" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor={`fwd-email-${req.id}`} className="flex items-center text-xs"><Mail className="w-3 h-3 mr-2" />Recipient Email</Label>
+                                                    <Input id={`fwd-email-${req.id}`} type="email" placeholder="e.g. john.smith@example.com" />
+                                                </div>
+                                            </div>
+                                            <Button variant="secondary" size="sm" disabled>
+                                                <Send className="w-4 h-4 mr-2" />Forward (Coming Soon)
+                                            </Button>
+                                        </div>
+
                                         <div className="flex justify-end pt-4 mt-4 border-t border-white/10 gap-2">
+                                            <RequestDetailsDialog request={req} />
                                             <Button 
                                                 variant="outline" 
                                                 size="sm"
