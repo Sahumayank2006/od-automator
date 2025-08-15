@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { sendEmail } from './actions';
 import { AddClassDialog } from './AddClassDialog';
 import { Loader2 } from 'lucide-react';
+import { saveOdRequest } from '@/lib/database';
 
 
 import { Button } from '@/components/ui/button';
@@ -123,94 +124,116 @@ export default function DashboardPage() {
         const { default: jsPDF } = await import('jspdf');
         await import('jspdf-autotable');
 
-        const doc = new (jsPDF as any)();
-        let yPos = 45;
-    
-        doc.setFontSize(20);
-        doc.text("Amity University", 105, 20, { align: 'center' });
-        doc.setFontSize(16);
-        doc.text("On-Duty Application Form", 105, 30, { align: 'center' });
-    
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text("Faculty Coordinator Information", 14, yPos);
-        yPos += 7;
-        doc.autoTable({
-            startY: yPos,
-            head: [['Name', 'Email']],
-            body: [[data.facultyCoordinatorName, data.facultyCoordinatorEmail]],
-            theme: 'grid',
-            styles: { fontSize: 10 },
-            headStyles: { fillColor: [22, 160, 133] },
-        });
-        yPos = doc.lastAutoTable.finalY + 10;
-    
-        doc.setFont('helvetica', 'bold');
-        doc.text("Event Information", 14, yPos);
-        yPos += 7;
-        doc.autoTable({
-            startY: yPos,
-            head: [['Event Name', 'Date', 'Day', 'From', 'To']],
-            body: [[
-                data.eventName,
-                data.eventDate ? format(data.eventDate, "PPP") : 'N/A',
-                data.eventDay,
-                data.eventFromTime,
-                data.eventToTime,
-            ]],
-            theme: 'grid',
-            styles: { fontSize: 10 },
-            headStyles: { fillColor: [22, 160, 133] },
-        });
-        yPos = doc.lastAutoTable.finalY + 10;
-    
-        doc.setFont('helvetica', 'bold');
-        doc.text("Affected Classes & Lectures", 14, yPos);
-        yPos += 7;
-    
-        data.classes.forEach((classInfo) => {
-            const classHeader = `Class: ${classInfo.course} ${classInfo.program} - Semester ${classInfo.semester} (Section ${classInfo.section})`;
-            doc.setFontSize(11);
+        try {
+            const dbResponse = await saveOdRequest(data);
+            if (!dbResponse.success) {
+                throw new Error(dbResponse.error);
+            }
+            toast({ title: "Request Saved", description: "Your OD request has been saved to the database." });
+
+            const doc = new (jsPDF as any)();
+            let yPos = 45;
+        
+            doc.setFontSize(20);
+            doc.text("Amity University", 105, 20, { align: 'center' });
+            doc.setFontSize(16);
+            doc.text("On-Duty Application Form", 105, 30, { align: 'center' });
+        
+            doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text(classHeader, 14, yPos);
-            yPos += 6;
-    
-            const lectureBody = classInfo.lectures.map(lec => [lec.subject, lec.faculty, `${lec.fromTime} - ${lec.toTime}`]);
+            doc.text("Faculty Coordinator Information", 14, yPos);
+            yPos += 7;
             doc.autoTable({
                 startY: yPos,
-                head: [['Subject', 'Faculty', 'Time Slot']],
-                body: lectureBody,
-                theme: 'striped',
-                styles: { fontSize: 9 },
-                headStyles: { fillColor: [41, 128, 185] },
+                head: [['Name', 'Email']],
+                body: [[data.facultyCoordinatorName, data.facultyCoordinatorEmail]],
+                theme: 'grid',
+                styles: { fontSize: 10 },
+                headStyles: { fillColor: [22, 160, 133] },
             });
-            yPos = doc.lastAutoTable.finalY + 5;
-            
-            classInfo.lectures.forEach((lecture) => {
-                doc.setFontSize(10);
+            yPos = doc.lastAutoTable.finalY + 10;
+        
+            doc.setFont('helvetica', 'bold');
+            doc.text("Event Information", 14, yPos);
+            yPos += 7;
+            doc.autoTable({
+                startY: yPos,
+                head: [['Event Name', 'Date', 'Day', 'From', 'To']],
+                body: [[
+                    data.eventName,
+                    data.eventDate ? format(data.eventDate, "PPP") : 'N/A',
+                    data.eventDay,
+                    data.eventFromTime,
+                    data.eventToTime,
+                ]],
+                theme: 'grid',
+                styles: { fontSize: 10 },
+                headStyles: { fillColor: [22, 160, 133] },
+            });
+            yPos = doc.lastAutoTable.finalY + 10;
+        
+            doc.setFont('helvetica', 'bold');
+            doc.text("Affected Classes & Lectures", 14, yPos);
+            yPos += 7;
+        
+            data.classes.forEach((classInfo) => {
+                const classHeader = `Class: ${classInfo.course} ${classInfo.program} - Semester ${classInfo.semester} (Section ${classInfo.section})`;
+                doc.setFontSize(11);
                 doc.setFont('helvetica', 'bold');
-                doc.text(`Students for: ${lecture.subject} (${lecture.fromTime} - ${lecture.toTime})`, 14, yPos);
-                yPos += 5;
-                const studentList = lecture.students.split('\n').map(s => [s]);
+                doc.text(classHeader, 14, yPos);
+                yPos += 6;
+        
+                const lectureBody = classInfo.lectures.map(lec => [lec.subject, lec.faculty, `${lec.fromTime} - ${lec.toTime}`]);
                 doc.autoTable({
                     startY: yPos,
-                    head: [['Student Name & Enrollment No.']],
-                    body: studentList,
-                    theme: 'grid',
-                    styles: { fontSize: 8 },
-                    headStyles: { fillColor: [80, 80, 80] },
+                    head: [['Subject', 'Faculty', 'Time Slot']],
+                    body: lectureBody,
+                    theme: 'striped',
+                    styles: { fontSize: 9 },
+                    headStyles: { fillColor: [41, 128, 185] },
                 });
-                yPos = doc.lastAutoTable.finalY + 8;
+                yPos = doc.lastAutoTable.finalY + 5;
+                
+                classInfo.lectures.forEach((lecture) => {
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`Students for: ${lecture.subject} (${lecture.fromTime} - ${lecture.toTime})`, 14, yPos);
+                    yPos += 5;
+                    const studentList = lecture.students.split('\n').map(s => [s]);
+                    doc.autoTable({
+                        startY: yPos,
+                        head: [['Student Name & Enrollment No.']],
+                        body: studentList,
+                        theme: 'grid',
+                        styles: { fontSize: 8 },
+                        headStyles: { fillColor: [80, 80, 80] },
+                    });
+                    yPos = doc.lastAutoTable.finalY + 8;
+                });
             });
-        });
-    
-        doc.save(`OD_Application_${data.eventName.replace(/ /g, '_')}.pdf`);
-        setIsGeneratingPdf(false);
+        
+            doc.save(`OD_Application_${data.eventName.replace(/ /g, '_')}.pdf`);
+        } catch (error) {
+            console.error("Error generating PDF or saving data:", error);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: error instanceof Error ? error.message : "An unknown error occurred.",
+            });
+        } finally {
+            setIsGeneratingPdf(false);
+        }
     };
 
     const handleSendEmail = async (data: ODFormValues) => {
         setIsSending(true);
         try {
+            const dbResponse = await saveOdRequest(data);
+             if (!dbResponse.success) {
+                throw new Error(dbResponse.error);
+            }
+            toast({ title: "Request Saved", description: "Your OD request has been saved to the database." });
+            
             const response = await sendEmail(data);
             if (response.success) {
                 toast({
@@ -385,10 +408,10 @@ export default function DashboardPage() {
                             <div className="flex justify-end space-x-4">
                                 <Button type="button" variant="secondary" onClick={() => form.reset()}>Clear Form</Button>
                                 <Button type="button" disabled={isGeneratingPdf || isSending} onClick={form.handleSubmit(handleGeneratePdf)}>
-                                    {isGeneratingPdf ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : <><FileText className="mr-2 h-4 w-4" />Generate PDF</>}
+                                    {isGeneratingPdf ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : <><FileText className="mr-2 h-4 w-4" />Generate PDF & Save</>}
                                 </Button>
                                 <Button type="button" disabled={isSending || isGeneratingPdf} onClick={form.handleSubmit(handleSendEmail)}>
-                                    {isSending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending...</> : <><Mail className="mr-2 h-4 w-4" />Send Email</>}
+                                    {isSending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending...</> : <><Mail className="mr-2 h-4 w-4" />Send Email & Save</>}
                                 </Button>
                             </div>
                         </form>

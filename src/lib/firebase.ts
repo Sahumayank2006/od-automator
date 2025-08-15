@@ -1,19 +1,20 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  "projectId": "od-nimbus",
+  "appId": "1:633930719463:web:87b969c74d0644c7ee8242",
+  "storageBucket": "od-nimbus.firebasestorage.app",
+  "apiKey": "AIzaSyCB9c2DODy4ol9cesXaeTb3hI4fsaxpXlM",
+  "authDomain": "od-nimbus.firebaseapp.com",
+  "measurementId": "",
+  "messagingSenderId": "633930719463"
 };
 
 // Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+const db = getFirestore(app);
 
-export default app;
+export { app, db };

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Home, Save, GraduationCap, Calendar, BookOpen, User, Tag, PlusCircle } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { saveTimetable, loadAllTimetables } from '@/lib/database';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Combobox } from '@/components/ui/combobox';
 import { defaultTimetables } from '@/lib/timetables';
+import { Loader2 } from 'lucide-react';
 
 const lectureFormSchema = z.object({
   subjectName: z.string().min(1, 'Subject name is required.'),
@@ -49,7 +51,7 @@ export interface TimetableData {
   schedule: Schedule;
 }
 
-const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+export const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const lectureTimings = [
     { id: 'L1', fromTime: '09:15', toTime: '10:10' },
     { id: 'L2', fromTime: '10:15', toTime: '11:10' },
@@ -171,18 +173,26 @@ export default function TimetablePage() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedLecture, setSelectedLecture] = useState<{ day: string, lectureId: string } | null>(null);
     const [allTimetables, setAllTimetables] = useState<Record<string, TimetableData>>({});
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
-        try {
-            const storedTimetables = localStorage.getItem('timetables');
-            const parsedTimetables = storedTimetables ? JSON.parse(storedTimetables) : {};
-            const mergedTimetables = { ...defaultTimetables, ...parsedTimetables };
-            setAllTimetables(mergedTimetables);
-        } catch(e) {
-            console.error("Could not parse timetables from local storage", e);
-            setAllTimetables(defaultTimetables);
+        async function fetchTimetables() {
+            setIsLoading(true);
+            try {
+                const loadedTimetables = await loadAllTimetables();
+                const mergedTimetables = { ...defaultTimetables, ...loadedTimetables };
+                setAllTimetables(mergedTimetables);
+            } catch(e) {
+                console.error("Could not fetch timetables from database", e);
+                setAllTimetables(defaultTimetables);
+                 toast({ variant: 'destructive', title: "Error Loading Data", description: "Could not fetch timetables from the database. Using local defaults." });
+            } finally {
+                setIsLoading(false);
+            }
         }
-    }, []);
+        fetchTimetables();
+    }, [toast]);
 
     const loadTimetable = useCallback(() => {
         const { course, program, semester, section } = selectedClass;
@@ -200,8 +210,10 @@ export default function TimetablePage() {
     }, [selectedClass, allTimetables]);
     
     useEffect(() => {
-        loadTimetable();
-    }, [selectedClass, loadTimetable]);
+        if (!isLoading) {
+            loadTimetable();
+        }
+    }, [selectedClass, isLoading, loadTimetable]);
 
     const handleSelectChange = (field: keyof typeof selectedClass, value: string) => {
         setSelectedClass(prev => ({ ...prev, [field]: value }));
@@ -232,18 +244,28 @@ export default function TimetablePage() {
         }
     };
     
-    const handleSaveTimetable = () => {
+    const handleSaveTimetable = async () => {
         if (!timetable) {
             toast({ variant: 'destructive', title: "No Timetable", description: "Please select a class and create a timetable first." });
             return;
         }
-
-        const key = `${timetable.course}-${timetable.program}-${timetable.semester}-${timetable.section}`;
-        const updatedTimetables = { ...allTimetables, [key]: timetable };
-        
-        localStorage.setItem('timetables', JSON.stringify(updatedTimetables));
-        setAllTimetables(updatedTimetables);
-        toast({ title: "Timetable Saved!", description: "The timetable has been saved to your browser's local storage." });
+        setIsSaving(true);
+        try {
+            const result = await saveTimetable(timetable);
+            if(result.success) {
+                const key = `${timetable.course}-${timetable.program}-${timetable.semester}-${timetable.section}`;
+                const updatedTimetables = { ...allTimetables, [key]: timetable };
+                setAllTimetables(updatedTimetables);
+                toast({ title: "Timetable Saved!", description: "The timetable has been saved to the database." });
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            console.error("Error saving timetable:", error);
+            toast({ variant: 'destructive', title: "Save Failed", description: "Could not save the timetable to the database." });
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const getCurrentLecture = () => {
@@ -263,7 +285,10 @@ export default function TimetablePage() {
                             <h1 className="text-2xl font-headline font-bold text-foreground">Timetable Manager</h1>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
-                            <Button onClick={handleSaveTimetable}><Save className="mr-2 h-4 w-4"/>Save Timetable</Button>
+                            <Button onClick={handleSaveTimetable} disabled={isSaving || isLoading}>
+                                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
+                                Save Timetable
+                            </Button>
                             <Link href="/dashboard" passHref>
                                 <Button variant="ghost">
                                     <Home className="w-4 h-4 mr-2"/>
@@ -294,7 +319,12 @@ export default function TimetablePage() {
                         </div>
                     </SectionPanel>
 
-                    {timetable ? (
+                    {isLoading ? (
+                         <div className="text-center py-16 text-muted-foreground flex items-center justify-center">
+                            <Loader2 className="w-6 h-6 mr-3 animate-spin text-primary"/>
+                            <p>Loading timetables from database...</p>
+                        </div>
+                    ) : timetable ? (
                         <div className="glass-panel p-6 md:p-8">
                              <div className="flex items-center mb-6">
                                 <BookOpen className="w-6 h-6 mr-3 text-primary" />
