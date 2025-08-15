@@ -4,13 +4,27 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { getAllOdRequests, ODRequest, ODRequestStatus } from '@/lib/database';
-import { Loader2, BarChart3, Home, Clock, CheckCircle, XCircle, Info } from 'lucide-react';
+import { getAllOdRequests, deleteOdRequest, ODRequest, ODRequestStatus } from '@/lib/database';
+import { Loader2, BarChart3, Home, Clock, CheckCircle, XCircle, Info, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { RequestDetailsDialog } from '../dashboard/RequestDetailsDialog';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 
 const StatusBadge = ({ status }: { status: ODRequestStatus }) => {
     const statusStyles = {
@@ -35,16 +49,28 @@ const StatusBadge = ({ status }: { status: ODRequestStatus }) => {
 export default function EventStatusPage() {
     const [requests, setRequests] = useState<ODRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const { toast } = useToast();
+
+    const fetchRequests = async () => {
+        setIsLoading(true);
+        const fetchedRequests = await getAllOdRequests();
+        setRequests(fetchedRequests);
+        setIsLoading(false);
+    }
 
     useEffect(() => {
-        async function fetchRequests() {
-            setIsLoading(true);
-            const fetchedRequests = await getAllOdRequests();
-            setRequests(fetchedRequests);
-            setIsLoading(false);
-        }
         fetchRequests();
     }, []);
+
+    const handleDelete = async (id: string) => {
+        const result = await deleteOdRequest(id);
+        if(result.success) {
+            toast({ title: 'Request Deleted', description: 'The rejected OD request has been removed.' });
+            fetchRequests();
+        } else {
+            toast({ variant: 'destructive', title: 'Deletion Failed', description: result.error });
+        }
+    }
 
     const summary = requests.reduce((acc, req) => {
         acc[req.status] = (acc[req.status] || 0) + 1;
@@ -90,8 +116,28 @@ export default function EventStatusPage() {
                                         <h3 className="font-headline font-semibold">{req.eventName}</h3>
                                         <p className="text-xs text-muted-foreground">To: {req.facultyCoordinatorName}</p>
                                     </div>
-                                    <div className="flex-shrink-0">
+                                    <div className="flex items-center gap-2 flex-shrink-0">
                                         <StatusBadge status={req.status} />
+                                        <RequestDetailsDialog request={req}/>
+                                        {req.status === 'Rejected' && (
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="destructive" size="icon"><Trash2 className="w-4 h-4" /></Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            This action cannot be undone. This will permanently delete this OD request from the database.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={() => handleDelete(req.id)}>Delete</AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        )}
                                     </div>
                                 </div>
                             ))}

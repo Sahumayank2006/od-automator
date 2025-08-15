@@ -1,4 +1,4 @@
-import { collection, doc, setDoc, getDocs, serverTimestamp, query, updateDoc, orderBy } from "firebase/firestore";
+import { collection, doc, setDoc, getDocs, serverTimestamp, query, updateDoc, orderBy, deleteDoc } from "firebase/firestore";
 import { db } from './firebase';
 import type { ODFormValues } from "@/app/dashboard/page";
 import type { TimetableData } from "@/app/timetable/page";
@@ -59,6 +59,20 @@ export async function updateOdRequestStatus(id: string, status: ODRequestStatus)
         return { success: true };
     } catch (error) {
         console.error("Error updating OD request status: ", error);
+        if (error instanceof Error) {
+            return { success: false, error: error.message };
+        }
+        return { success: false, error: "An unknown error occurred." };
+    }
+}
+
+export async function deleteOdRequest(id: string) {
+    try {
+        const odRequestRef = doc(db, "odRequests", id);
+        await deleteDoc(odRequestRef);
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting OD request: ", error);
         if (error instanceof Error) {
             return { success: false, error: error.message };
         }
