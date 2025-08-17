@@ -1,9 +1,9 @@
 🔐 Login Credentials (For Testing/Demo Purposes)
  For testing purposes, use the following credentials to access the OD Automator web app: 
-🔹**Admin login with acc@admin**
-and 🔹**password mayank**, 
+🔹**Admin login with - acc@admin**
+and 🔹**password - mayank**, 
 and 
-🔹**Faculty Dashboard access using passcode 002025**.
+🔹**Faculty Dashboard access using passcode - 002025**.
 
 othere teammates website with credentials -
 **1). Aditya(leader) website- https://odautomation.netlify.app/login**
