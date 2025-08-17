@@ -1,6 +1,8 @@
 🔐 Login Credentials (For Testing/Demo Purposes)
  For testing purposes, use the following credentials to access the OD Automator web app: 
-Admin login with acc@admin and password mayank, and 
+Admin login with acc@admin 
+and password mayank, 
+and 
 Faculty Dashboard access using passcode 002025.
 
 
