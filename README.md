@@ -5,6 +5,13 @@ and 🔹**password mayank**,
 and 
 🔹**Faculty Dashboard access using passcode 002025**.
 
+othere teammates website with credentials -
+**1). Aditya(leader) website- https://odautomation.netlify.app/login**
+**id - AccCordinator , pass- AccAdmin@Amity**
+
+**2). Navya website - https://attendance-automation-delta.vercel.app/**
+**id - coordinator@acc , pass- Amity@acc**
+
 
 🧠 Project Report: OD Automator Web Application
 📅 Date: August 17, 2025
