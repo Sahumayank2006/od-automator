@@ -9,8 +9,8 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 import { sendEmail } from './actions';
 import { AddClassDialog } from './AddClassDialog';
-import { Loader2, Upload } from 'lucide-react';
-import { saveOdRequest } from '@/lib/database';
+import { Loader2, Upload, Eye } from 'lucide-react';
+import { saveOdRequest, ODRequest } from '@/lib/database';
 import Papa from 'papaparse';
 
 
@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { RequestDetailsDialog } from './RequestDetailsDialog';
 
 
 import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, User, Building, LogOut, GraduationCap, Table as TableIcon, ShieldCheck, BarChart3, Users, Edit } from 'lucide-react';
@@ -112,6 +113,8 @@ export default function DashboardPage() {
     const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
     const [editingClassIndex, setEditingClassIndex] = useState<number | null>(null);
     const [studentData, setStudentData] = useState<StudentData[]>([]);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [previewData, setPreviewData] = useState<ODRequest | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -220,6 +223,17 @@ export default function DashboardPage() {
         }
         setEditingClassIndex(null);
     };
+
+    const handlePreview = (data: ODFormValues) => {
+        setPreviewData({
+            ...data,
+            id: 'preview',
+            status: 'Pending',
+            createdAt: new Date(),
+        });
+        setIsPreviewOpen(true);
+    };
+
 
     const handleGeneratePdf = async (data: ODFormValues) => {
         setIsGeneratingPdf(true);
@@ -336,6 +350,7 @@ export default function DashboardPage() {
                     title: "Email Sent",
                     description: "The OD request email has been sent successfully.",
                 });
+                 form.reset();
             } else {
                 throw new Error(response.error);
             }
@@ -365,6 +380,13 @@ export default function DashboardPage() {
                 studentData={studentData}
                 initialData={editingClassIndex !== null ? classFields[editingClassIndex] : undefined}
              />
+             {previewData && (
+                <RequestDetailsDialog
+                    open={isPreviewOpen}
+                    onOpenChange={setIsPreviewOpen}
+                    request={previewData}
+                />
+             )}
             <ScrollArea className="h-screen bg-background">
                 <div className="max-w-7xl mx-auto space-y-8 pb-32 p-4 md:p-8">
                     <header className="flex flex-wrap items-center justify-between gap-4 py-4">
@@ -552,11 +574,14 @@ export default function DashboardPage() {
                             <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-background/80 backdrop-blur-sm border-t border-white/10">
                                 <div className="max-w-7xl mx-auto flex justify-end items-center gap-4">
                                     <Button type="button" variant="secondary" onClick={() => form.reset()}>Clear Form</Button>
+                                    <Button type="button" variant="outline" onClick={form.handleSubmit(handlePreview)}>
+                                        <Eye className="mr-2 h-4 w-4" />Preview Request
+                                    </Button>
                                     <Button type="button" disabled={isGeneratingPdf || isSending} onClick={form.handleSubmit(handleGeneratePdf)}>
                                         {isGeneratingPdf ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : <><FileText className="mr-2 h-4 w-4" />Generate PDF</>}
                                     </Button>
                                     <Button type="button" disabled={isSending || isGeneratingPdf} onClick={form.handleSubmit(handleSendEmail)}>
-                                        {isSending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending...</> : <><Mail className="mr-2 h-4 w-4" />Send Email & Save</>}
+                                        {isSending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending...</> : <><Mail className="mr-2 h-4 w-4" />Save & Send Email</>}
                                     </Button>
                                 </div>
                             </div>

@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { getAllOdRequests, deleteOdRequest, ODRequest, ODRequestStatus } from '@/lib/database';
-import { Loader2, BarChart3, Home, Clock, CheckCircle, XCircle, Info, Trash2 } from 'lucide-react';
+import { Loader2, BarChart3, Home, Clock, CheckCircle, XCircle, Info, Trash2, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -118,7 +118,10 @@ export default function EventStatusPage() {
                                     </div>
                                     <div className="flex items-center gap-2 flex-shrink-0">
                                         <StatusBadge status={req.status} />
-                                        <RequestDetailsDialog request={req}/>
+                                        <RequestDetailsDialog 
+                                            request={req}
+                                            trigger={<Button variant="outline" size="sm"><FileText className="w-4 h-4 mr-2" />View Details</Button>}
+                                        />
                                         {req.status === 'Rejected' && (
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
