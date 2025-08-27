@@ -1,5 +1,6 @@
-name,enrolment no.,course,semester,section
-John Doe,A123,B.Tech,3,A
-Jane Smith,A456,B.Tech,3,A
-Peter Jones,B789,B.Tech,3,B
-Mary Johnson,C321,BCA,5,C
+name,enrollment,course,program,semester,section
+"NAITIK TIWARI","A60205224097","B.Tech","CSE","1","B"
+"RYTUI UYTI","RT6789NJI","B.Tech","IT","1","B"
+"John Doe","A1234567","B.Tech","CSE","3","A"
+"Jane Smith","B7654321","B.Tech","IT","3","B"
+"Peter Jones","C1122334","BCA","General","5","A"
