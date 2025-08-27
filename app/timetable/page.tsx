@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import Link from 'next/link';
 import { Home, Save, GraduationCap, Calendar, BookOpen, User, Tag, PlusCircle } from 'lucide-react';
@@ -52,7 +52,7 @@ export interface TimetableData {
 }
 
 export const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-const lectureTimings = [
+const defaultLectureTimings = [
     { id: 'L1', fromTime: '09:15', toTime: '10:10' },
     { id: 'L2', fromTime: '10:15', toTime: '11:10' },
     { id: 'L3', fromTime: '11:15', toTime: '12:10' },
@@ -63,10 +63,21 @@ const lectureTimings = [
     { id: 'L7', fromTime: '16:15', toTime: '17:10' },
 ];
 
-const generateInitialSchedule = (): Record<string, Lecture[]> => {
+const semester1LectureTimings = [
+    { id: 'L1', fromTime: '09:15', toTime: '10:10' },
+    { id: 'L2', fromTime: '10:15', toTime: '11:10' },
+    { id: 'L3', fromTime: '11:15', toTime: '12:10' },
+    { id: 'LUNCH', fromTime: '12:15', toTime: '13:10' },
+    { id: 'L4', fromTime: '13:15', toTime: '14:10' },
+    { id: 'L5', fromTime: '14:15', toTime: '15:10' },
+    { id: 'L6', fromTime: '15:15', toTime: '16:10' },
+    { id: 'L7', fromTime: '16:15', toTime: '17:10' },
+];
+
+const generateInitialSchedule = (timings: typeof defaultLectureTimings): Record<string, Lecture[]> => {
     const schedule: Record<string, Lecture[]> = {};
     daysOfWeek.forEach(day => {
-        schedule[day] = lectureTimings.map(timing => ({ ...timing, id: `${day}-${timing.id}` }));
+        schedule[day] = timings.map(timing => ({ ...timing, id: `${day}-${timing.id}` }));
     });
     return schedule;
 };
@@ -168,13 +179,17 @@ const sectionOptions = ['A', 'B', 'C', 'D', 'E'].map(sec => ({
 
 export default function TimetablePage() {
     const { toast } = useToast();
-    const [selectedClass, setSelectedClass] = useState({ course: 'B.Tech', program: 'CSE', semester: '3', section: 'A' });
+    const [selectedClass, setSelectedClass] = useState({ course: 'B.Tech', program: 'CSE', semester: '1', section: 'A' });
     const [timetable, setTimetable] = useState<TimetableData | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedLecture, setSelectedLecture] = useState<{ day: string, lectureId: string } | null>(null);
     const [allTimetables, setAllTimetables] = useState<Record<string, TimetableData>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+
+    const lectureTimings = useMemo(() => {
+        return selectedClass.semester === '1' ? semester1LectureTimings : defaultLectureTimings;
+    }, [selectedClass.semester]);
 
     useEffect(() => {
         async function fetchTimetables() {
@@ -202,12 +217,12 @@ export default function TimetablePage() {
             if (existingTimetable) {
                 setTimetable(existingTimetable);
             } else {
-                setTimetable({ ...selectedClass, schedule: generateInitialSchedule() });
+                setTimetable({ ...selectedClass, schedule: generateInitialSchedule(lectureTimings) });
             }
         } else {
             setTimetable(null);
         }
-    }, [selectedClass, allTimetables]);
+    }, [selectedClass, allTimetables, lectureTimings]);
     
     useEffect(() => {
         if (!isLoading) {
@@ -337,7 +352,7 @@ export default function TimetablePage() {
                                             <th className="p-1 border border-border sticky left-0 bg-secondary/50 z-10 text-xs">Day</th>
                                             {lectureTimings.map(t => (
                                                 <th key={t.id} className="p-1 border border-border text-xs">
-                                                    {t.id !== 'LUNCH' ? `Lec ${t.id.replace('L','')}` : ''} <br/> <span className="font-normal text-muted-foreground text-[10px]">{t.fromTime}-{t.toTime}</span>
+                                                    {t.id !== 'LUNCH' ? `Lec ${t.id.replace('L','')}` : 'LUNCH'} <br/> <span className="font-normal text-muted-foreground text-[10px]">{t.fromTime}-{t.toTime}</span>
                                                 </th>
                                             ))}
                                         </tr>
@@ -347,7 +362,7 @@ export default function TimetablePage() {
                                             <tr key={day}>
                                                 <td className="p-1 border border-border font-semibold sticky left-0 bg-secondary/80 z-10 text-xs">{day}</td>
                                                 {timetable.schedule[day] && timetable.schedule[day].map((lecture, index) => {
-                                                     if (lecture.fromTime === '13:10') {
+                                                     if (lecture.id.endsWith('LUNCH')) {
                                                         return <td key={`${lecture.id}-${index}`} className="p-1 border border-border bg-muted/30 font-semibold text-muted-foreground align-middle text-xs">LUNCH</td>
                                                      }
                                                      return (

@@ -18,6 +18,8 @@ import { TimetableData } from '../timetable/page';
 import { defaultTimetables } from '@/lib/timetables';
 import { PlusCircle, Trash2, BookOpen, Save, Bot, Edit, FileText } from 'lucide-react';
 import { LectureEditDialog, type LectureFormValues } from './LectureEditDialog';
+import { loadAllTimetables } from '@/lib/database';
+import { Loader2 } from 'lucide-react';
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -26,6 +28,7 @@ const lectureSchema = z.object({
   fromTime: z.string().min(1, "Start time is required."),
   toTime: z.string().min(1, "End time is required."),
   students: z.string().min(1, "Student list is required."),
+  section: z.string().optional(),
 });
 
 const classSchema = z.object({
@@ -70,7 +73,8 @@ interface AddClassDialogProps {
 export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: AddClassDialogProps) {
     const { toast } = useToast();
     const [isLectureModalOpen, setIsLectureModalOpen] = useState(false);
-    const [editingLecture, setEditingLecture] = useState<LectureFormValues | undefined>(undefined);
+    const [editingLecture, setEditingLecture] = useState<Partial<LectureFormValues> | undefined>(undefined);
+    const [isAutofilling, setIsAutofilling] = useState(false);
 
     const form = useForm<ClassFormValues>({
         resolver: zodResolver(classSchema),
@@ -93,93 +97,114 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
       return hours * 60 + minutes;
     };
 
-    const handleAutofill = () => {
+    const handleAutofill = async () => {
+        setIsAutofilling(true);
         const { course, program, semester, section } = form.getValues();
         const { eventDate, eventFromTime, eventToTime } = eventDetails;
         
         if (!course || !program || !semester || !section) {
             toast({ variant: 'destructive', title: "Missing Class Details", description: "Please select course, program, semester, and section." });
+            setIsAutofilling(false);
             return;
         }
 
         if (!eventDate || !eventFromTime || !eventToTime) {
             toast({ variant: 'destructive', title: "Missing Event Details", description: "Please provide the event date and time on the main page." });
+            setIsAutofilling(false);
             return;
         }
 
-        const storedTimetables = JSON.parse(localStorage.getItem('timetables') || '{}');
-        const allTimetables = { ...defaultTimetables, ...storedTimetables };
-        const timetableKey = `${course}-${program}-${semester}-${section}`;
-        const timetable: TimetableData = allTimetables[timetableKey];
+        try {
+            const dbTimetables = await loadAllTimetables();
+            const allTimetables = { ...defaultTimetables, ...dbTimetables };
+            const timetableKey = `${course}-${program}-${semester}-${section}`;
+            const timetable: TimetableData = allTimetables[timetableKey];
 
-        if (!timetable) {
-            toast({ variant: 'destructive', title: "No Timetable Found", description: "A timetable for this class and section has not been created yet." });
-            return;
-        }
+            if (!timetable) {
+                toast({ variant: 'destructive', title: "No Timetable Found", description: "A timetable for this class and section has not been created yet." });
+                setIsAutofilling(false);
+                return;
+            }
 
-        const eventDayIndex = (getDay(eventDate) + 6) % 7; // Monday = 0, Sunday = 6
-        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        const eventDayName = days[eventDayIndex];
+            const eventDayIndex = (getDay(eventDate) + 6) % 7; // Monday = 0, Sunday = 6
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            const eventDayName = days[eventDayIndex];
 
-        const eventStartMinutes = timeToMinutes(eventFromTime);
-        const eventEndMinutes = timeToMinutes(eventToTime);
+            const eventStartMinutes = timeToMinutes(eventFromTime);
+            const eventEndMinutes = timeToMinutes(eventToTime);
 
-        const daySchedule = timetable.schedule[eventDayName];
-        if (!daySchedule) return;
+            const daySchedule = timetable.schedule[eventDayName];
+            if (!daySchedule) {
+                toast({ title: "No Lectures Today", description: `No lectures scheduled for ${eventDayName}.` });
+                setIsAutofilling(false);
+                return;
+            };
 
-        const conflictingLectures = daySchedule.filter(lecture => {
-            if (!lecture.fromTime || !lecture.toTime || !lecture.subjectName || lecture.subjectName.toUpperCase().includes('LIBRARY') || lecture.subjectName.toUpperCase().includes('CCA')) return false;
+            const conflictingLectures = daySchedule.filter(lecture => {
+                if (!lecture.fromTime || !lecture.toTime || !lecture.subjectName || lecture.subjectName.toUpperCase().includes('LIBRARY') || lecture.subjectName.toUpperCase().includes('CCA')) return false;
+                
+                const lectureStartMinutes = timeToMinutes(lecture.fromTime);
+                const lectureEndMinutes = timeToMinutes(lecture.toTime);
+                
+                const overlapStart = Math.max(eventStartMinutes, lectureStartMinutes);
+                const overlapEnd = Math.min(eventEndMinutes, lectureEndMinutes);
+                const overlapDuration = overlapEnd - overlapStart;
+
+                return overlapDuration >= 15;
+            });
+
+            if (conflictingLectures.length === 0) {
+                toast({ title: "No Conflicts", description: "No lectures conflict with the specified event time for 15 minutes or more." });
+                setIsAutofilling(false);
+                return;
+            }
+
+            const newLectures = conflictingLectures.map(lec => ({
+                id: crypto.randomUUID(),
+                subject: `${lec.subjectName} | ${lec.subjectCode}`,
+                faculty: `${lec.facultyName}${lec.facultyCode ? ` | ${lec.facultyCode}` : ''}`,
+                fromTime: lec.fromTime,
+                toTime: lec.toTime,
+                students: '',
+                section: section,
+            }));
             
-            const lectureStartMinutes = timeToMinutes(lecture.fromTime);
-            const lectureEndMinutes = timeToMinutes(lecture.toTime);
-            
-            const overlapStart = Math.max(eventStartMinutes, lectureStartMinutes);
-            const overlapEnd = Math.min(eventEndMinutes, lectureEndMinutes);
-            const overlapDuration = overlapEnd - overlapStart;
+            form.setValue('lectures', newLectures, { shouldValidate: true });
 
-            return overlapDuration >= 15;
-        });
-
-        if (conflictingLectures.length === 0) {
-            toast({ title: "No Conflicts", description: "No lectures conflict with the specified event time for 15 minutes or more." });
-            return;
+            toast({ title: "Lectures Autofilled", description: `${conflictingLectures.length} conflicting lectures have been added.` });
+        } catch (error) {
+             toast({ variant: 'destructive', title: "Error Fetching Timetables", description: "Could not load timetables from the database." });
+        } finally {
+            setIsAutofilling(false);
         }
-
-        const newLectures = conflictingLectures.map(lec => ({
-            id: crypto.randomUUID(),
-            subject: `${lec.subjectName} | ${lec.subjectCode}`,
-            faculty: `${lec.facultyName}${lec.facultyCode ? ` | ${lec.facultyCode}` : ''}`,
-            fromTime: lec.fromTime,
-            toTime: lec.toTime,
-            students: ''
-        }));
-        
-        form.setValue('lectures', newLectures, { shouldValidate: true });
-
-        toast({ title: "Lectures Autofilled", description: `${conflictingLectures.length} conflicting lectures have been added.` });
     };
 
     const handleSaveLecture = (lectureData: LectureFormValues) => {
         const currentLectures = form.getValues('lectures');
         const existingIndex = currentLectures.findIndex(l => l.id === lectureData.id);
+        const classSection = form.getValues('section');
+
+        const dataToSave = { ...lectureData, section: classSection };
 
         if (existingIndex > -1) {
-            currentLectures[existingIndex] = lectureData;
+            currentLectures[existingIndex] = dataToSave;
             form.setValue('lectures', [...currentLectures], { shouldValidate: true });
             toast({ title: 'Lecture Updated', description: `Details for ${lectureData.subject} have been updated.`});
         } else {
-            form.setValue('lectures', [...currentLectures, lectureData], { shouldValidate: true });
+            form.setValue('lectures', [...currentLectures, dataToSave], { shouldValidate: true });
             toast({ title: 'Lecture Added', description: `${lectureData.subject} has been added.`});
         }
     };
     
     const handleEditLecture = (lecture: LectureFormValues) => {
-        setEditingLecture(lecture);
+        const classSection = form.getValues('section');
+        setEditingLecture({ ...lecture, section: classSection });
         setIsLectureModalOpen(true);
     }
     
     const handleAddNewLecture = () => {
-        setEditingLecture(undefined);
+        const classSection = form.getValues('section');
+        setEditingLecture({ section: classSection });
         setIsLectureModalOpen(true);
     };
 
@@ -237,7 +262,10 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
                                 <div className="flex flex-wrap justify-between items-center mb-4 gap-2 flex-shrink-0">
                                     <h4 className="text-md font-headline font-semibold flex items-center"><BookOpen className="w-5 h-5 mr-2 text-primary"/>Affected Lectures</h4>
                                     <div className="flex gap-2">
-                                        <Button type="button" size="sm" onClick={handleAutofill}><Bot className="w-4 h-4 mr-2" />Autofill Conflicts</Button>
+                                        <Button type="button" size="sm" onClick={handleAutofill} disabled={isAutofilling}>
+                                            {isAutofilling ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Bot className="w-4 h-4 mr-2" />}
+                                            Autofill Conflicts
+                                        </Button>
                                         <Button type="button" size="sm" variant="ghost" onClick={handleAddNewLecture}><PlusCircle className="mr-2 h-4 w-4"/>Add New Lecture</Button>
                                     </div>
                                 </div>
@@ -257,7 +285,7 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
                                                         <p className="text-xs text-muted-foreground truncate">{lecture.faculty} &bull; {lecture.fromTime} - {lecture.toTime}</p>
                                                     </div>
                                                     <div className="flex gap-2">
-                                                        <Button type="button" size="icon" variant="ghost" onClick={() => handleEditLecture(lecture)}><Edit className="w-4 h-4" /></Button>
+                                                        <Button type="button" size="icon" variant="ghost" onClick={() => handleEditLecture(lecture as LectureFormValues)}><Edit className="w-4 h-4" /></Button>
                                                         <Button type="button" size="icon" variant="destructive" onClick={() => handleRemoveLecture(lecture.id)}><Trash2 className="w-4 h-4"/></Button>
                                                     </div>
                                                 </div>
