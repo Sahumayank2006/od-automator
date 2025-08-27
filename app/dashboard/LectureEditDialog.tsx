@@ -31,6 +31,8 @@ const lectureSchema = z.object({
 export type LectureFormValues = z.infer<typeof lectureSchema>;
 
 const lectureStartTimes = ["09:15", "10:15", "11:15", "12:15", "13:15", "14:15", "15:15", "16:15"];
+const lectureEndTimes = ["10:10", "11:10", "12:10", "13:10", "14:10", "15:10", "16:10", "17:10"];
+
 
 interface LectureEditDialogProps {
   open: boolean;
@@ -73,14 +75,6 @@ export function LectureEditDialog({ open, onOpenChange, onSave, initialData, stu
 
   const handleStartTimeChange = (value: string) => {
     form.setValue('fromTime', value, { shouldValidate: true, shouldDirty: true });
-    if (value) {
-      const [hours, minutes] = value.split(':').map(Number);
-      const startDate = new Date();
-      startDate.setHours(hours, minutes, 0, 0);
-      const endDate = addMinutes(startDate, 55);
-      const toTime = format(endDate, 'HH:mm');
-      form.setValue('toTime', toTime, { shouldValidate: true, shouldDirty: true });
-    }
   };
 
   const handleAutofillStudents = () => {
@@ -199,7 +193,16 @@ export function LectureEditDialog({ open, onOpenChange, onSave, initialData, stu
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="flex items-center"><Clock className="w-4 h-4 mr-2" />To</FormLabel>
-                          <FormControl><Input type="time" {...field} /></FormControl>
+                           <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select end time" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                {lectureEndTimes.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
                           <FormMessage />
                         </FormItem>
                       )}
