@@ -55,6 +55,18 @@ const classSchema = z.object({
   lectures: z.array(lectureSchema),
 });
 
+const odFormSchema = z.object({
+  facultyCoordinatorName: z.string().min(1, "Faculty coordinator name is required."),
+  facultyCoordinatorEmail: z.string().email("Please enter a valid email."),
+  eventName: z.string().min(1, "Event name is required."),
+  eventDate: z.date({ required_error: "Event date is required." }),
+  eventDay: z.string(),
+  eventFromTime: z.string().min(1, "Event start time is required."),
+  eventToTime: z.string().min(1, "Event end time is required."),
+  classes: z.array(classSchema).min(1, "At least one class must be added."),
+});
+
+
 export type ODFormValues = z.infer<typeof odFormSchema>;
 
 const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: string; icon: React.ElementType, children: React.ReactNode, titleClassName?: string }) => (
@@ -537,14 +549,16 @@ export default function DashboardPage() {
                                 </div>
                             </SectionPanel>
 
-                            <div className="flex justify-end space-x-4">
-                                <Button type="button" variant="secondary" onClick={() => form.reset()}>Clear Form</Button>
-                                <Button type="button" disabled={isGeneratingPdf || isSending} onClick={form.handleSubmit(handleGeneratePdf)}>
-                                    {isGeneratingPdf ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : <><FileText className="mr-2 h-4 w-4" />Generate PDF</>}
-                                </Button>
-                                <Button type="button" disabled={isSending || isGeneratingPdf} onClick={form.handleSubmit(handleSendEmail)}>
-                                    {isSending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending...</> : <><Mail className="mr-2 h-4 w-4" />Send Email & Save</>}
-                                </Button>
+                            <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-background/80 backdrop-blur-sm border-t border-white/10">
+                                <div className="max-w-7xl mx-auto flex justify-end items-center gap-4">
+                                    <Button type="button" variant="secondary" onClick={() => form.reset()}>Clear Form</Button>
+                                    <Button type="button" disabled={isGeneratingPdf || isSending} onClick={form.handleSubmit(handleGeneratePdf)}>
+                                        {isGeneratingPdf ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : <><FileText className="mr-2 h-4 w-4" />Generate PDF</>}
+                                    </Button>
+                                    <Button type="button" disabled={isSending || isGeneratingPdf} onClick={form.handleSubmit(handleSendEmail)}>
+                                        {isSending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending...</> : <><Mail className="mr-2 h-4 w-4" />Send Email & Save</>}
+                                    </Button>
+                                </div>
                             </div>
                         </form>
                     </Form>
