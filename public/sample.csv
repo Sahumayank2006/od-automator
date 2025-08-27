@@ -1,11 +1,5 @@
-name,enrolment no.,section
-Aditya Sharma,0010123021,A
-Priya Singh,0020123021,A
-Rohan Mehta,0030123021,A
-Anjali Gupta,0040123021,B
-Vikram Patel,0050123021,B
-Sneha Reddy,0060123021,C
-Karan Verma,0070123021,C
-Natasha Kumar,0080123021,A
-Sameer Khan,0090123021,B
-Pooja Desai,0100123021,C
+name,enrolment no.,course,semester,section
+John Doe,A123,B.Tech,3,A
+Jane Smith,A456,B.Tech,3,A
+Peter Jones,B789,B.Tech,3,B
+Mary Johnson,C321,BCA,5,C

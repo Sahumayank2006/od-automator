@@ -152,7 +152,10 @@ function FacultyAdminPage() {
                                         </div>
 
                                         <div className="flex justify-end pt-4 mt-4 border-t border-white/10 gap-2">
-                                            <RequestDetailsDialog request={req} />
+                                            <RequestDetailsDialog 
+                                                request={req}
+                                                trigger={<Button variant="outline" size="sm"><FileText className="w-4 h-4 mr-2" />View Details</Button>}
+                                            />
                                             <Button 
                                                 variant="outline" 
                                                 size="sm"

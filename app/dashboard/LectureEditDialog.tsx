@@ -4,10 +4,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { format, addMinutes } from 'date-fns';
-import Papa from 'papaparse';
-
 
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -16,8 +14,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { BookOpen, User, Clock, Save, Upload } from 'lucide-react';
+import { BookOpen, User, Clock, Save, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import type { StudentData } from './page';
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -26,23 +25,25 @@ const lectureSchema = z.object({
   fromTime: z.string().min(1, "Start time is required."),
   toTime: z.string().min(1, "End time is required."),
   students: z.string().min(1, "Student list is required."),
-  section: z.string().optional(), // Add section to the schema for filtering
+  section: z.string().optional(),
 });
 
 export type LectureFormValues = z.infer<typeof lectureSchema>;
 
 const lectureStartTimes = ["09:15", "10:15", "11:15", "12:15", "13:15", "14:15", "15:15", "16:15"];
+const lectureEndTimes = ["10:10", "11:10", "12:10", "13:10", "14:10", "15:10", "16:10", "17:10"];
+
 
 interface LectureEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (data: LectureFormValues) => void;
-  initialData?: Partial<LectureFormValues>;
+  initialData?: Partial<LectureFormValues> & { course?: string, semester?: string };
+  studentData: StudentData[];
 }
 
-export function LectureEditDialog({ open, onOpenChange, onSave, initialData }: LectureEditDialogProps) {
+export function LectureEditDialog({ open, onOpenChange, onSave, initialData, studentData }: LectureEditDialogProps) {
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const form = useForm<LectureFormValues>({
     resolver: zodResolver(lectureSchema),
@@ -74,82 +75,53 @@ export function LectureEditDialog({ open, onOpenChange, onSave, initialData }: L
 
   const handleStartTimeChange = (value: string) => {
     form.setValue('fromTime', value, { shouldValidate: true, shouldDirty: true });
-    if (value) {
-      const [hours, minutes] = value.split(':').map(Number);
-      const startDate = new Date();
-      startDate.setHours(hours, minutes, 0, 0);
-      const endDate = addMinutes(startDate, 55);
-      const toTime = format(endDate, 'HH:mm');
-      form.setValue('toTime', toTime, { shouldValidate: true, shouldDirty: true });
-    }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      toast({ variant: 'destructive', title: 'No file selected' });
-      return;
-    }
+  const handleAutofillStudents = () => {
+        const currentSection = initialData?.section;
+        const currentCourse = initialData?.course;
+        const currentSemester = initialData?.semester;
+        
+        if (!currentCourse || !currentSemester) {
+            toast({ variant: 'destructive', title: 'Class details not defined', description: 'Cannot autofill students without a class course and semester.' });
+            return;
+        }
 
-    const currentSection = initialData?.section;
-    if (!currentSection) {
-      toast({ variant: 'destructive', title: 'Section not defined', description: 'Cannot import students without a class section.' });
-      return;
-    }
+        if (!currentSection) {
+            toast({ variant: 'destructive', title: 'Section not defined', description: 'Cannot autofill students without a class section.' });
+            return;
+        }
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        try {
-          const students = results.data
-            .map(row => ({
-              name: (row as any).name?.trim(),
-              enrollment: (row as any)['enrolment no.']?.trim() || (row as any).enrollment?.trim(),
-              section: (row as any).section?.trim(),
-            }))
-            .filter(student => student.section?.toUpperCase() === currentSection.toUpperCase() && student.name && student.enrollment);
+        if (studentData.length === 0) {
+            toast({ variant: 'destructive', title: "No Student Data", description: "Please load student data from a CSV on the main page first." });
+            return;
+        }
 
-          if (students.length === 0) {
+        const sectionStudents = studentData.filter(s => 
+            s.section === currentSection && 
+            s.course.toLowerCase() === currentCourse.toLowerCase() &&
+            s.semester === currentSemester
+        );
+
+        if (sectionStudents.length === 0) {
             toast({
-              variant: 'destructive',
-              title: 'No Students Found',
-              description: `Could not find any students for Section ${currentSection} in the CSV.`,
+                variant: 'destructive',
+                title: 'No Students Found',
+                description: `Could not find any students for ${currentCourse} Sem ${currentSemester} Section ${currentSection} in the loaded CSV.`,
             });
             return;
-          }
+        }
 
-          const studentListString = students
+        const studentListString = sectionStudents
             .map(s => `${s.name} ${s.enrollment}`)
             .join('\n');
           
-          form.setValue('students', studentListString, { shouldValidate: true, shouldDirty: true });
+        form.setValue('students', studentListString, { shouldValidate: true, shouldDirty: true });
           
-          toast({
-            title: 'Import Successful',
-            description: `${students.length} students from Section ${currentSection} have been imported.`,
-          });
-        } catch (error) {
-           toast({
-              variant: 'destructive',
-              title: 'CSV Parsing Error',
-              description: 'Please check the CSV format. Required columns: name, enrolment no., section.',
-            });
-        }
-      },
-      error: (error) => {
         toast({
-          variant: 'destructive',
-          title: 'File Read Error',
-          description: error.message,
+            title: 'Autofill Successful',
+            description: `${sectionStudents.length} students from ${currentCourse} Sem ${currentSemester} Section ${currentSection} have been added.`,
         });
-      }
-    });
-
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
 
@@ -221,7 +193,16 @@ export function LectureEditDialog({ open, onOpenChange, onSave, initialData }: L
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="flex items-center"><Clock className="w-4 h-4 mr-2" />To</FormLabel>
-                          <FormControl><Input type="time" {...field} readOnly className="bg-muted/50" /></FormControl>
+                           <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select end time" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                {lectureEndTimes.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -234,19 +215,12 @@ export function LectureEditDialog({ open, onOpenChange, onSave, initialData }: L
                       <FormItem>
                         <div className="flex justify-between items-center">
                           <FormLabel className="flex items-center"><User className="w-4 h-4 mr-2" />Student List</FormLabel>
-                          <Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>
-                            <Upload className="w-4 h-4 mr-2" /> Import from CSV
+                          <Button type="button" size="sm" variant="outline" onClick={handleAutofillStudents}>
+                            <Users className="w-4 h-4 mr-2" /> Autofill from CSV
                           </Button>
-                          <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleFileUpload}
-                            className="hidden"
-                            accept=".csv"
-                          />
                         </div>
                         <FormControl>
-                          <Textarea placeholder="Enter one student per line (Name + Enrollment No.) or import from CSV." {...field} className="min-h-[200px]" />
+                          <Textarea placeholder="Enter one student per line (Name + Enrollment No.) or autofill from the loaded CSV." {...field} className="min-h-[200px]" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

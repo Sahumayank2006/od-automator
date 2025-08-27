@@ -1,3 +1,4 @@
+
 'use server';
 
 import nodemailer from 'nodemailer';
@@ -5,7 +6,7 @@ import { render } from '@react-email/render';
 import { ODRequestEmail } from '@/emails/od-request';
 import type { ODFormValues } from './page';
 
-export async function sendEmail(data: ODFormValues) {
+export async function sendEmail(data: ODFormValues, pdfUrl?: string) {
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
@@ -18,12 +19,29 @@ export async function sendEmail(data: ODFormValues) {
 
   const emailHtml = render(ODRequestEmail({ data }));
 
-  const options = {
+  const options: nodemailer.SendMailOptions = {
     from: `"OD Automator" <${process.env.GMAIL_EMAIL}>`,
     to: data.facultyCoordinatorEmail,
     subject: `On-Duty Request: ${data.eventName}`,
     html: emailHtml,
   };
+
+  if (data.cc) {
+    options.cc = data.cc;
+  }
+
+  if (data.bcc) {
+    options.bcc = data.bcc;
+  }
+
+  if (pdfUrl) {
+    options.attachments = [
+        {
+            filename: `OD_Application_${data.eventName.replace(/ /g, '_')}.pdf`,
+            path: pdfUrl,
+        },
+    ];
+  }
 
   try {
     const emailData = await transporter.sendMail(options);

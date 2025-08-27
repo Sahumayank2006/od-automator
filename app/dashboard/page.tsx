@@ -9,8 +9,11 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 import { sendEmail } from './actions';
 import { AddClassDialog } from './AddClassDialog';
-import { Loader2 } from 'lucide-react';
-import { saveOdRequest } from '@/lib/database';
+import { Loader2, Upload, Eye, FileUp } from 'lucide-react';
+import { saveOdRequest, ODRequest } from '@/lib/database';
+import Papa from 'papaparse';
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { app } from '@/lib/firebase';
 
 
 import { Button } from '@/components/ui/button';
@@ -22,8 +25,19 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { EmailPreviewDialog } from './EmailPreviewDialog';
 
-import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, User, Building, LogOut, GraduationCap, Table, ShieldCheck, BarChart3 } from 'lucide-react';
+
+import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, User, Building, LogOut, GraduationCap, Table as TableIcon, ShieldCheck, BarChart3, Users, Edit } from 'lucide-react';
+
+export interface StudentData {
+  name: string;
+  enrollment: string;
+  section: string;
+  course: string;
+  semester: string;
+}
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -32,6 +46,7 @@ const lectureSchema = z.object({
   fromTime: z.string().min(1, "Start time is required."),
   toTime: z.string().min(1, "End time is required."),
   students: z.string().min(1, "Student list is required."),
+  section: z.string().optional(),
 });
 
 const classSchema = z.object({
@@ -46,6 +61,8 @@ const classSchema = z.object({
 const odFormSchema = z.object({
   facultyCoordinatorName: z.string().min(1, "Faculty coordinator name is required."),
   facultyCoordinatorEmail: z.string().email("Please enter a valid email."),
+  cc: z.string().optional(),
+  bcc: z.string().optional(),
   eventName: z.string().min(1, "Event name is required."),
   eventDate: z.date({ required_error: "Event date is required." }),
   eventDay: z.string(),
@@ -53,6 +70,7 @@ const odFormSchema = z.object({
   eventToTime: z.string().min(1, "Event end time is required."),
   classes: z.array(classSchema).min(1, "At least one class must be added."),
 });
+
 
 export type ODFormValues = z.infer<typeof odFormSchema>;
 
@@ -69,7 +87,7 @@ const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: 
     </div>
 );
 
-const ClassAccordionItem = ({ classField, classIndex, removeClass }: { classField: any, classIndex: number, removeClass: (index: number) => void }) => {
+const ClassAccordionItem = ({ classField, classIndex, removeClass, onEdit }: { classField: any, classIndex: number, removeClass: (index: number) => void, onEdit: (index: number) => void }) => {
     return (
         <AccordionItem value={classField.id} className="glass-panel-inner !border-t-0 p-4 rounded-2xl overflow-hidden">
             <AccordionTrigger className="hover:no-underline">
@@ -83,7 +101,8 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass }: { classFiel
                 <div className="border-t border-white/10 pt-6">
                      <p className="text-sm text-muted-foreground mb-4">This class has {classField.lectures.length} lecture(s) affected. You can view student and lecture details in the generated PDF or email.</p>
                 </div>
-                <div className="flex justify-end pt-4 mt-4 border-t border-white/10">
+                <div className="flex justify-end pt-4 mt-4 border-t border-white/10 gap-2">
+                    <Button type="button" variant="outline" onClick={() => onEdit(classIndex)}><Edit className="w-4 h-4 mr-2"/>Edit Class</Button>
                     <Button type="button" variant="destructive" onClick={() => removeClass(classIndex)}><Trash2 className="w-4 h-4 mr-2"/>Remove Class</Button>
                 </div>
             </AccordionContent>
@@ -96,12 +115,78 @@ export default function DashboardPage() {
     const [isSending, setIsSending] = useState(false);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
+    const [editingClassIndex, setEditingClassIndex] = useState<number | null>(null);
+    const [studentData, setStudentData] = useState<StudentData[]>([]);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [previewData, setPreviewData] = useState<ODFormValues | null>(null);
+    const [uploadedPdfUrl, setUploadedPdfUrl] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) {
+          toast({ variant: 'destructive', title: 'No file selected' });
+          return;
+        }
+
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            try {
+              const students = results.data
+                .map(row => ({
+                  name: (row as any).name?.trim(),
+                  enrollment: (row as any)['enrolment no.']?.trim() || (row as any).enrollment?.trim(),
+                  section: (row as any).section?.trim().toUpperCase(),
+                  course: (row as any).course?.trim(),
+                  semester: (row as any).semester?.trim(),
+                }))
+                .filter(student => student.name && student.enrollment && student.section && student.course && student.semester);
+    
+              if (students.length === 0) {
+                toast({
+                  variant: 'destructive',
+                  title: 'No Students Found',
+                  description: 'Could not find valid student data in the CSV. Required columns: name, enrolment no., section, course, semester.',
+                });
+                return;
+              }
+              
+              setStudentData(students);
+              toast({
+                title: 'Import Successful',
+                description: `${students.length} students have been loaded from the CSV.`,
+              });
+            } catch (error) {
+               toast({
+                  variant: 'destructive',
+                  title: 'CSV Parsing Error',
+                  description: 'Please check the CSV format. Required columns: name, enrolment no., section, course, semester.',
+                });
+            }
+          },
+          error: (error) => {
+            toast({
+              variant: 'destructive',
+              title: 'File Read Error',
+              description: error.message,
+            });
+          }
+        });
+
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+    };
     
     const form = useForm<ODFormValues>({
         resolver: zodResolver(odFormSchema),
         defaultValues: {
             facultyCoordinatorName: '',
             facultyCoordinatorEmail: '',
+            cc: '',
+            bcc: '',
             eventName: '',
             eventDate: undefined,
             eventDay: '',
@@ -112,15 +197,49 @@ export default function DashboardPage() {
         mode: 'onChange',
     });
 
-    const { fields: classFields, append: appendClass, remove: removeClass } = useFieldArray({
+    const { fields: classFields, append: appendClass, remove: removeClass, update: updateClass } = useFieldArray({
         control: form.control,
         name: "classes",
     });
 
     const eventDetails = form.watch(['eventDate', 'eventFromTime', 'eventToTime']);
 
+    const handleEditClass = (index: number) => {
+        setEditingClassIndex(index);
+        setIsAddClassModalOpen(true);
+    };
+
+    const handleOpenAddClassDialog = () => {
+        setEditingClassIndex(null);
+        setIsAddClassModalOpen(true);
+    };
+
+    const handleSaveClass = (newClass: z.infer<typeof classSchema>) => {
+        if (editingClassIndex !== null) {
+            updateClass(editingClassIndex, newClass);
+            toast({
+                title: "Class Updated",
+                description: `${newClass.course} ${newClass.program} - Sem ${newClass.semester} has been updated.`
+            });
+        } else {
+            appendClass(newClass);
+            toast({
+                title: "Class Added",
+                description: `${newClass.course} ${newClass.program} - Sem ${newClass.semester} has been added to the list.`
+            });
+        }
+        setEditingClassIndex(null);
+    };
+
+    const handlePreview = (data: ODFormValues) => {
+        setPreviewData(data);
+        setIsPreviewOpen(true);
+    };
+
+
     const handleGeneratePdf = async (data: ODFormValues) => {
         setIsGeneratingPdf(true);
+        setUploadedPdfUrl(null);
         const { default: jsPDF } = await import('jspdf');
         await import('jspdf-autotable');
 
@@ -206,12 +325,28 @@ export default function DashboardPage() {
                 });
             });
         
+            const pdfBlob = doc.output('blob');
+            const storage = getStorage(app);
+            const fileName = `od_requests/OD_Application_${data.eventName.replace(/ /g, '_')}_${Date.now()}.pdf`;
+            const storageRef = ref(storage, fileName);
+
+            await uploadBytes(storageRef, pdfBlob);
+            const downloadURL = await getDownloadURL(storageRef);
+            setUploadedPdfUrl(downloadURL);
+            
+            toast({
+                title: "PDF Generated & Uploaded",
+                description: "The PDF has been successfully uploaded and is ready to be sent with the email.",
+            });
+
+            // Also download locally
             doc.save(`OD_Application_${data.eventName.replace(/ /g, '_')}.pdf`);
+
         } catch (error) {
-            console.error("Error generating PDF:", error);
+            console.error("Error generating or uploading PDF:", error);
             toast({
                 variant: "destructive",
-                title: "Error Generating PDF",
+                title: "Error with PDF",
                 description: error instanceof Error ? error.message : "An unknown error occurred.",
             });
         } finally {
@@ -222,18 +357,23 @@ export default function DashboardPage() {
     const handleSendEmail = async (data: ODFormValues) => {
         setIsSending(true);
         try {
-            const dbResponse = await saveOdRequest(data);
+            if (!uploadedPdfUrl) {
+                throw new Error("PDF has not been generated or uploaded yet. Please generate the PDF first.");
+            }
+            const dbResponse = await saveOdRequest(data, uploadedPdfUrl);
              if (!dbResponse.success) {
                 throw new Error(dbResponse.error);
             }
             toast({ title: "Request Saved", description: "Your OD request has been saved to the database." });
             
-            const response = await sendEmail(data);
+            const response = await sendEmail(data, uploadedPdfUrl);
             if (response.success) {
                 toast({
                     title: "Email Sent",
-                    description: "The OD request email has been sent successfully.",
+                    description: "The OD request email has been sent successfully with the PDF attached.",
                 });
+                 form.reset();
+                 setUploadedPdfUrl(null);
             } else {
                 throw new Error(response.error);
             }
@@ -254,18 +394,19 @@ export default function DashboardPage() {
              <AddClassDialog
                 open={isAddClassModalOpen}
                 onOpenChange={setIsAddClassModalOpen}
-                onSave={(newClass) => {
-                    appendClass(newClass);
-                    toast({
-                        title: "Class Added",
-                        description: `${newClass.course} ${newClass.program} - Sem ${newClass.semester} has been added to the list.`
-                    });
-                }}
+                onSave={handleSaveClass}
                 eventDetails={{
                   eventDate: eventDetails[0],
                   eventFromTime: eventDetails[1],
                   eventToTime: eventDetails[2],
                 }}
+                studentData={studentData}
+                initialData={editingClassIndex !== null ? classFields[editingClassIndex] : undefined}
+             />
+             <EmailPreviewDialog
+                open={isPreviewOpen}
+                onOpenChange={setIsPreviewOpen}
+                data={previewData}
              />
             <ScrollArea className="h-screen bg-background">
                 <div className="max-w-7xl mx-auto space-y-8 pb-32 p-4 md:p-8">
@@ -276,7 +417,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
                             <Link href="/timetable" passHref>
-                                <Button variant="outline"><Table className="w-4 h-4 mr-2"/>Manage Timetable</Button>
+                                <Button variant="outline"><TableIcon className="w-4 h-4 mr-2"/>Manage Timetable</Button>
                             </Link>
                              <Link href="/faculty" passHref>
                                 <Button variant="outline"><ShieldCheck className="w-4 h-4 mr-2"/>Faculty Admin</Button>
@@ -305,8 +446,22 @@ export default function DashboardPage() {
                                         )}/>
                                         <FormField control={form.control} name="facultyCoordinatorEmail" render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel className="flex items-center"><Mail className="w-4 h-4 mr-2 opacity-70"/>Email</FormLabel>
+                                                <FormLabel className="flex items-center"><Mail className="w-4 h-4 mr-2 opacity-70"/>To Email</FormLabel>
                                                 <FormControl><Input placeholder="e.g., jane.doe@example.com" {...field} /></FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}/>
+                                         <FormField control={form.control} name="cc" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="flex items-center"><Mail className="w-4 h-4 mr-2 opacity-70"/>CC (Optional)</FormLabel>
+                                                <FormControl><Input placeholder="e.g., another.person@example.com" {...field} /></FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}/>
+                                         <FormField control={form.control} name="bcc" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="flex items-center"><Mail className="w-4 h-4 mr-2 opacity-70"/>BCC (Optional)</FormLabel>
+                                                <FormControl><Input placeholder="e.g., supervisor@example.com" {...field} /></FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}/>
@@ -373,6 +528,57 @@ export default function DashboardPage() {
                                 </SectionPanel>
                             </div>
 
+                             <SectionPanel title="Student Data" icon={Users}>
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-4">
+                                        <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                                            <Upload className="w-4 h-4 mr-2" /> Load Student Data from CSV
+                                        </Button>
+                                        <a href="/sample.csv" download>
+                                            <Button type="button" variant="link">Download Sample CSV</Button>
+                                        </a>
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleFileUpload}
+                                            className="hidden"
+                                            accept=".csv"
+                                        />
+                                    </div>
+                                    {studentData.length > 0 ? (
+                                        <ScrollArea className="h-64 mt-4 border rounded-lg bg-background/30">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Name</TableHead>
+                                                        <TableHead>Enrollment No.</TableHead>
+                                                        <TableHead>Course</TableHead>
+                                                        <TableHead>Semester</TableHead>
+                                                        <TableHead>Section</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {studentData.map((student, index) => (
+                                                        <TableRow key={index}>
+                                                            <TableCell>{student.name}</TableCell>
+                                                            <TableCell>{student.enrollment}</TableCell>
+                                                            <TableCell>{student.course}</TableCell>
+                                                            <TableCell>{student.semester}</TableCell>
+                                                            <TableCell>{student.section}</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </ScrollArea>
+                                    ) : (
+                                        <div className="text-center py-8 text-muted-foreground bg-background/30 rounded-lg">
+                                            <p>No student data loaded.</p>
+                                            <p className="text-sm">Click the button to load a student CSV file.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </SectionPanel>
+
                             <SectionPanel title="Affected Classes" icon={Building}>
                                 <div className="space-y-4">
                                     <Accordion type="multiple" className="space-y-4">
@@ -382,6 +588,7 @@ export default function DashboardPage() {
                                                 classField={field} 
                                                 classIndex={index} 
                                                 removeClass={removeClass} 
+                                                onEdit={handleEditClass}
                                             />
                                         ))}
                                     </Accordion>
@@ -392,21 +599,26 @@ export default function DashboardPage() {
                                         </div>
                                     )}
 
-                                    <Button type="button" variant="outline" onClick={() => setIsAddClassModalOpen(true)}>
+                                    <Button type="button" variant="outline" onClick={handleOpenAddClassDialog}>
                                         <PlusCircle className="mr-2 h-4 w-4" />
                                         Add Class
                                     </Button>
                                 </div>
                             </SectionPanel>
 
-                            <div className="flex justify-end space-x-4">
-                                <Button type="button" variant="secondary" onClick={() => form.reset()}>Clear Form</Button>
-                                <Button type="button" disabled={isGeneratingPdf || isSending} onClick={form.handleSubmit(handleGeneratePdf)}>
-                                    {isGeneratingPdf ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : <><FileText className="mr-2 h-4 w-4" />Generate PDF</>}
-                                </Button>
-                                <Button type="button" disabled={isSending || isGeneratingPdf} onClick={form.handleSubmit(handleSendEmail)}>
-                                    {isSending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending...</> : <><Mail className="mr-2 h-4 w-4" />Send Email & Save</>}
-                                </Button>
+                            <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-background/80 backdrop-blur-sm border-t border-white/10">
+                                <div className="max-w-7xl mx-auto flex justify-end items-center gap-4">
+                                    <Button type="button" variant="secondary" onClick={() => form.reset()}>Clear Form</Button>
+                                    <Button type="button" variant="outline" onClick={form.handleSubmit(handlePreview)}>
+                                        <Eye className="mr-2 h-4 w-4" />Preview Email
+                                    </Button>
+                                    <Button type="button" disabled={isGeneratingPdf || isSending} onClick={form.handleSubmit(handleGeneratePdf)}>
+                                        {isGeneratingPdf ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : <><FileUp className="mr-2 h-4 w-4" />Generate & Upload PDF</>}
+                                    </Button>
+                                    <Button type="button" disabled={isSending || isGeneratingPdf || !uploadedPdfUrl} onClick={form.handleSubmit(handleSendEmail)}>
+                                        {isSending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending...</> : <><Mail className="mr-2 h-4 w-4" />Save & Send Email</>}
+                                    </Button>
+                                </div>
                             </div>
                         </form>
                     </Form>
