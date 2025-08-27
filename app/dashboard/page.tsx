@@ -26,7 +26,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 
-import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, User, Building, LogOut, GraduationCap, Table as TableIcon, ShieldCheck, BarChart3, Users } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, User, Building, LogOut, GraduationCap, Table as TableIcon, ShieldCheck, BarChart3, Users, Edit } from 'lucide-react';
 
 export interface StudentData {
   name: string;
@@ -43,6 +43,7 @@ const lectureSchema = z.object({
   fromTime: z.string().min(1, "Start time is required."),
   toTime: z.string().min(1, "End time is required."),
   students: z.string().min(1, "Student list is required."),
+  section: z.string().optional(),
 });
 
 const classSchema = z.object({
@@ -52,17 +53,6 @@ const classSchema = z.object({
   semester: z.string().min(1, "Semester is required."),
   section: z.enum(["A", "B", "C", "D", "E"], { required_error: "Section is required." }),
   lectures: z.array(lectureSchema),
-});
-
-const odFormSchema = z.object({
-  facultyCoordinatorName: z.string().min(1, "Faculty coordinator name is required."),
-  facultyCoordinatorEmail: z.string().email("Please enter a valid email."),
-  eventName: z.string().min(1, "Event name is required."),
-  eventDate: z.date({ required_error: "Event date is required." }),
-  eventDay: z.string(),
-  eventFromTime: z.string().min(1, "Event start time is required."),
-  eventToTime: z.string().min(1, "Event end time is required."),
-  classes: z.array(classSchema).min(1, "At least one class must be added."),
 });
 
 export type ODFormValues = z.infer<typeof odFormSchema>;
@@ -80,7 +70,7 @@ const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: 
     </div>
 );
 
-const ClassAccordionItem = ({ classField, classIndex, removeClass }: { classField: any, classIndex: number, removeClass: (index: number) => void }) => {
+const ClassAccordionItem = ({ classField, classIndex, removeClass, onEdit }: { classField: any, classIndex: number, removeClass: (index: number) => void, onEdit: (index: number) => void }) => {
     return (
         <AccordionItem value={classField.id} className="glass-panel-inner !border-t-0 p-4 rounded-2xl overflow-hidden">
             <AccordionTrigger className="hover:no-underline">
@@ -94,7 +84,8 @@ const ClassAccordionItem = ({ classField, classIndex, removeClass }: { classFiel
                 <div className="border-t border-white/10 pt-6">
                      <p className="text-sm text-muted-foreground mb-4">This class has {classField.lectures.length} lecture(s) affected. You can view student and lecture details in the generated PDF or email.</p>
                 </div>
-                <div className="flex justify-end pt-4 mt-4 border-t border-white/10">
+                <div className="flex justify-end pt-4 mt-4 border-t border-white/10 gap-2">
+                    <Button type="button" variant="outline" onClick={() => onEdit(classIndex)}><Edit className="w-4 h-4 mr-2"/>Edit Class</Button>
                     <Button type="button" variant="destructive" onClick={() => removeClass(classIndex)}><Trash2 className="w-4 h-4 mr-2"/>Remove Class</Button>
                 </div>
             </AccordionContent>
@@ -107,6 +98,7 @@ export default function DashboardPage() {
     const [isSending, setIsSending] = useState(false);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
+    const [editingClassIndex, setEditingClassIndex] = useState<number | null>(null);
     const [studentData, setStudentData] = useState<StudentData[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -183,12 +175,39 @@ export default function DashboardPage() {
         mode: 'onChange',
     });
 
-    const { fields: classFields, append: appendClass, remove: removeClass } = useFieldArray({
+    const { fields: classFields, append: appendClass, remove: removeClass, update: updateClass } = useFieldArray({
         control: form.control,
         name: "classes",
     });
 
     const eventDetails = form.watch(['eventDate', 'eventFromTime', 'eventToTime']);
+
+    const handleEditClass = (index: number) => {
+        setEditingClassIndex(index);
+        setIsAddClassModalOpen(true);
+    };
+
+    const handleOpenAddClassDialog = () => {
+        setEditingClassIndex(null);
+        setIsAddClassModalOpen(true);
+    };
+
+    const handleSaveClass = (newClass: z.infer<typeof classSchema>) => {
+        if (editingClassIndex !== null) {
+            updateClass(editingClassIndex, newClass);
+            toast({
+                title: "Class Updated",
+                description: `${newClass.course} ${newClass.program} - Sem ${newClass.semester} has been updated.`
+            });
+        } else {
+            appendClass(newClass);
+            toast({
+                title: "Class Added",
+                description: `${newClass.course} ${newClass.program} - Sem ${newClass.semester} has been added to the list.`
+            });
+        }
+        setEditingClassIndex(null);
+    };
 
     const handleGeneratePdf = async (data: ODFormValues) => {
         setIsGeneratingPdf(true);
@@ -325,19 +344,14 @@ export default function DashboardPage() {
              <AddClassDialog
                 open={isAddClassModalOpen}
                 onOpenChange={setIsAddClassModalOpen}
-                onSave={(newClass) => {
-                    appendClass(newClass);
-                    toast({
-                        title: "Class Added",
-                        description: `${newClass.course} ${newClass.program} - Sem ${newClass.semester} has been added to the list.`
-                    });
-                }}
+                onSave={handleSaveClass}
                 eventDetails={{
                   eventDate: eventDetails[0],
                   eventFromTime: eventDetails[1],
                   eventToTime: eventDetails[2],
                 }}
                 studentData={studentData}
+                initialData={editingClassIndex !== null ? classFields[editingClassIndex] : undefined}
              />
             <ScrollArea className="h-screen bg-background">
                 <div className="max-w-7xl mx-auto space-y-8 pb-32 p-4 md:p-8">
@@ -505,6 +519,7 @@ export default function DashboardPage() {
                                                 classField={field} 
                                                 classIndex={index} 
                                                 removeClass={removeClass} 
+                                                onEdit={handleEditClass}
                                             />
                                         ))}
                                     </Accordion>
@@ -515,7 +530,7 @@ export default function DashboardPage() {
                                         </div>
                                     )}
 
-                                    <Button type="button" variant="outline" onClick={() => setIsAddClassModalOpen(true)}>
+                                    <Button type="button" variant="outline" onClick={handleOpenAddClassDialog}>
                                         <PlusCircle className="mr-2 h-4 w-4" />
                                         Add Class
                                     </Button>

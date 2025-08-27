@@ -4,7 +4,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, FormProvider } from 'react-hook-form';
 import * as z from 'zod';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getDay } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
@@ -41,7 +41,7 @@ const classSchema = z.object({
   lectures: z.array(lectureSchema),
 });
 
-type ClassFormValues = z.infer<typeof classSchema>;
+export type ClassFormValues = z.infer<typeof classSchema>;
 
 const courseOptions = [
     { value: 'B.Tech', label: 'B.Tech' },
@@ -70,9 +70,10 @@ interface AddClassDialogProps {
     eventToTime?: string;
   };
   studentData: StudentData[];
+  initialData?: ClassFormValues;
 }
 
-export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, studentData }: AddClassDialogProps) {
+export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, studentData, initialData }: AddClassDialogProps) {
     const { toast } = useToast();
     const [isLectureModalOpen, setIsLectureModalOpen] = useState(false);
     const [editingLecture, setEditingLecture] = useState<Partial<LectureFormValues> & { course?: string, semester?: string } | undefined>(undefined);
@@ -80,7 +81,7 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
 
     const form = useForm<ClassFormValues>({
         resolver: zodResolver(classSchema),
-        defaultValues: {
+        defaultValues: initialData || {
             id: crypto.randomUUID(),
             course: '',
             program: '',
@@ -90,6 +91,19 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
         },
         mode: 'onChange',
     });
+
+    useEffect(() => {
+        if (open) {
+            form.reset(initialData || {
+                id: crypto.randomUUID(),
+                course: '',
+                program: '',
+                semester: '',
+                section: 'A',
+                lectures: [],
+            });
+        }
+    }, [open, initialData, form]);
 
     const lectures = form.watch('lectures');
 
@@ -291,7 +305,7 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
             <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) form.reset(); onOpenChange(isOpen); }}>
                 <DialogContent className="max-w-4xl h-[90vh] flex flex-col bg-secondary border-primary/50">
                     <DialogHeader className="flex-shrink-0">
-                        <DialogTitle className="text-primary text-glow">Add New Class</DialogTitle>
+                        <DialogTitle className="text-primary text-glow">{initialData ? 'Edit Class' : 'Add New Class'}</DialogTitle>
                     </DialogHeader>
                     <FormProvider {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
