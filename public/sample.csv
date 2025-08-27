@@ -1,5 +1,5 @@
-name,enrolment no.,course,section
-John Doe,A12345678,B.Tech,A
-Jane Smith,B87654321,B.Tech,A
-Peter Jones,C11223344,B.Tech,B
-Mary Johnson,D55667788,MCA,C
+name,enrolment no.,course,semester,section
+John Doe,A123,B.Tech,3,A
+Jane Smith,A456,B.Tech,3,A
+Peter Jones,B789,B.Tech,3,B
+Mary Johnson,C321,BCA,5,C

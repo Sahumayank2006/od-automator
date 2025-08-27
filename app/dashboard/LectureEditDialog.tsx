@@ -36,7 +36,7 @@ interface LectureEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (data: LectureFormValues) => void;
-  initialData?: Partial<LectureFormValues> & { course?: string };
+  initialData?: Partial<LectureFormValues> & { course?: string, semester?: string };
   studentData: StudentData[];
 }
 
@@ -86,9 +86,10 @@ export function LectureEditDialog({ open, onOpenChange, onSave, initialData, stu
   const handleAutofillStudents = () => {
         const currentSection = initialData?.section;
         const currentCourse = initialData?.course;
+        const currentSemester = initialData?.semester;
         
-        if (!currentCourse) {
-            toast({ variant: 'destructive', title: 'Course not defined', description: 'Cannot autofill students without a class course.' });
+        if (!currentCourse || !currentSemester) {
+            toast({ variant: 'destructive', title: 'Class details not defined', description: 'Cannot autofill students without a class course and semester.' });
             return;
         }
 
@@ -102,13 +103,17 @@ export function LectureEditDialog({ open, onOpenChange, onSave, initialData, stu
             return;
         }
 
-        const sectionStudents = studentData.filter(s => s.section === currentSection && s.course.toLowerCase() === currentCourse.toLowerCase());
+        const sectionStudents = studentData.filter(s => 
+            s.section === currentSection && 
+            s.course.toLowerCase() === currentCourse.toLowerCase() &&
+            s.semester === currentSemester
+        );
 
         if (sectionStudents.length === 0) {
             toast({
                 variant: 'destructive',
                 title: 'No Students Found',
-                description: `Could not find any students for ${currentCourse} Section ${currentSection} in the loaded CSV.`,
+                description: `Could not find any students for ${currentCourse} Sem ${currentSemester} Section ${currentSection} in the loaded CSV.`,
             });
             return;
         }
@@ -121,7 +126,7 @@ export function LectureEditDialog({ open, onOpenChange, onSave, initialData, stu
           
         toast({
             title: 'Autofill Successful',
-            description: `${sectionStudents.length} students from ${currentCourse} Section ${currentSection} have been added.`,
+            description: `${sectionStudents.length} students from ${currentCourse} Sem ${currentSemester} Section ${currentSection} have been added.`,
         });
   };
 

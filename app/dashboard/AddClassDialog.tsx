@@ -75,7 +75,7 @@ interface AddClassDialogProps {
 export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, studentData }: AddClassDialogProps) {
     const { toast } = useToast();
     const [isLectureModalOpen, setIsLectureModalOpen] = useState(false);
-    const [editingLecture, setEditingLecture] = useState<Partial<LectureFormValues> & { course?: string } | undefined>(undefined);
+    const [editingLecture, setEditingLecture] = useState<Partial<LectureFormValues> & { course?: string, semester?: string } | undefined>(undefined);
     const [isAutofilling, setIsAutofilling] = useState(false);
 
     const form = useForm<ClassFormValues>({
@@ -102,9 +102,10 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
     const handleAutofillStudents = () => {
         const classCourse = form.getValues('course');
         const classSection = form.getValues('section');
+        const classSemester = form.getValues('semester');
 
-        if (!classCourse) {
-            toast({ variant: 'destructive', title: "Course not selected", description: "Please select a course before autofilling students." });
+        if (!classCourse || !classSemester) {
+            toast({ variant: 'destructive', title: "Class details missing", description: "Please select a course and semester before autofilling students." });
             return;
         }
 
@@ -113,9 +114,13 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
             return;
         }
 
-        const sectionStudents = studentData.filter(s => s.section === classSection && s.course.toLowerCase() === classCourse.toLowerCase());
+        const sectionStudents = studentData.filter(s => 
+            s.section === classSection && 
+            s.course.toLowerCase() === classCourse.toLowerCase() &&
+            s.semester === classSemester
+        );
         if (sectionStudents.length === 0) {
-            toast({ variant: 'destructive', title: "No Matching Students", description: `No students found for ${classCourse} section ${classSection} in the loaded CSV.` });
+            toast({ variant: 'destructive', title: "No Matching Students", description: `No students found for ${classCourse} Semester ${classSemester} Section ${classSection} in the loaded CSV.` });
             return;
         }
 
@@ -130,7 +135,7 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
         }));
 
         form.setValue('lectures', updatedLectures, { shouldValidate: true, shouldDirty: true });
-        toast({ title: "Students Autofilled", description: `${sectionStudents.length} students from ${classCourse} section ${classSection} have been added to all lectures.` });
+        toast({ title: "Students Autofilled", description: `${sectionStudents.length} students from ${classCourse} Sem ${classSemester} Sec ${classSection} have been added to all lectures.` });
     };
 
     const handleAutofill = async () => {
@@ -235,14 +240,16 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
     const handleEditLecture = (lecture: LectureFormValues) => {
         const classSection = form.getValues('section');
         const classCourse = form.getValues('course');
-        setEditingLecture({ ...lecture, section: classSection, course: classCourse });
+        const classSemester = form.getValues('semester');
+        setEditingLecture({ ...lecture, section: classSection, course: classCourse, semester: classSemester });
         setIsLectureModalOpen(true);
     }
     
     const handleAddNewLecture = () => {
         const classSection = form.getValues('section');
         const classCourse = form.getValues('course');
-        setEditingLecture({ section: classSection, course: classCourse });
+        const classSemester = form.getValues('semester');
+        setEditingLecture({ section: classSection, course: classCourse, semester: classSemester });
         setIsLectureModalOpen(true);
     };
 
