@@ -188,37 +188,40 @@ const LectureEditDialog = ({ open, onOpenChange, lecture, onSave }: { open: bool
                 </DialogHeader>
                 <FormProvider {...formMethods}>
                     <Form {...formMethods}>
-                        <form onSubmit={formMethods.handleSubmit(onSubmit)} className="space-y-4">
-                            <FormField control={formMethods.control} name="isSplit" render={({ field }) => (
-                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-background/30">
-                                    <div className="space-y-0.5">
-                                        <FormLabel>This is a split lab session</FormLabel>
+                        <form onSubmit={formMethods.handleSubmit(onSubmit)}>
+                             <ScrollArea className="h-[60vh] -mr-4 pr-4">
+                                <div className="space-y-4">
+                                    <FormField control={formMethods.control} name="isSplit" render={({ field }) => (
+                                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-background/30">
+                                            <div className="space-y-0.5">
+                                                <FormLabel>This is a split lab session</FormLabel>
+                                            </div>
+                                            <FormControl>
+                                                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )} />
+
+                                    <div className="space-y-4">
+                                       <p className="text-sm font-semibold text-muted-foreground">{isSplit ? "Batch 1 Details" : "Lecture Details"}</p>
+                                       <FormField control={formMethods.control} name="subjectName" render={({ field }) => (<FormItem><FormLabel><BookOpen className="w-4 h-4 mr-2 inline"/>Subject Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                       <FormField control={formMethods.control} name="subjectCode" render={({ field }) => (<FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Subject Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                       <FormField control={formMethods.control} name="facultyName" render={({ field }) => (<FormItem><FormLabel><User className="w-4 h-4 mr-2 inline"/>Faculty Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                       <FormField control={formMethods.control} name="facultyCode" render={({ field }) => (<FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Faculty Code</FormLabel><FormControl><Input {...field} placeholder="e.g. F001 (Optional)"/></FormControl><FormMessage /></FormItem>)} />
                                     </div>
-                                    <FormControl>
-                                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                                    </FormControl>
-                                </FormItem>
-                            )} />
 
-                            <div className="space-y-4">
-                               <p className="text-sm font-semibold text-muted-foreground">{isSplit ? "Batch 1 Details" : "Lecture Details"}</p>
-                               <FormField control={formMethods.control} name="subjectName" render={({ field }) => (<FormItem><FormLabel><BookOpen className="w-4 h-4 mr-2 inline"/>Subject Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                               <FormField control={formMethods.control} name="subjectCode" render={({ field }) => (<FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Subject Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                               <FormField control={formMethods.control} name="facultyName" render={({ field }) => (<FormItem><FormLabel><User className="w-4 h-4 mr-2 inline"/>Faculty Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                               <FormField control={formMethods.control} name="facultyCode" render={({ field }) => (<FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Faculty Code</FormLabel><FormControl><Input {...field} placeholder="e.g. F001 (Optional)"/></FormControl><FormMessage /></FormItem>)} />
-                            </div>
-
-                            {isSplit && (
-                                <div className="space-y-4 pt-4 border-t border-white/10">
-                                    <p className="text-sm font-semibold text-muted-foreground">Batch 2 Details</p>
-                                    <FormField control={formMethods.control} name="subjectName2" render={({ field }) => (<FormItem><FormLabel><BookOpen className="w-4 h-4 mr-2 inline"/>Subject Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                    <FormField control={formMethods.control} name="subjectCode2" render={({ field }) => (<FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Subject Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                    <FormField control={formMethods.control} name="facultyName2" render={({ field }) => (<FormItem><FormLabel><User className="w-4 h-4 mr-2 inline"/>Faculty Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                    <FormField control={formMethods.control} name="facultyCode2" render={({ field }) => (<FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Faculty Code</FormLabel><FormControl><Input {...field} placeholder="e.g. F002 (Optional)"/></FormControl><FormMessage /></FormItem>)} />
+                                    {isSplit && (
+                                        <div className="space-y-4 pt-4 border-t border-white/10">
+                                            <p className="text-sm font-semibold text-muted-foreground">Batch 2 Details</p>
+                                            <FormField control={formMethods.control} name="subjectName2" render={({ field }) => (<FormItem><FormLabel><BookOpen className="w-4 h-4 mr-2 inline"/>Subject Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                            <FormField control={formMethods.control} name="subjectCode2" render={({ field }) => (<FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Subject Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                            <FormField control={formMethods.control} name="facultyName2" render={({ field }) => (<FormItem><FormLabel><User className="w-4 h-4 mr-2 inline"/>Faculty Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                            <FormField control={formMethods.control} name="facultyCode2" render={({ field }) => (<FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Faculty Code</FormLabel><FormControl><Input {...field} placeholder="e.g. F002 (Optional)"/></FormControl><FormMessage /></FormItem>)} />
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-
-                            <div className="flex justify-end pt-4">
+                            </ScrollArea>
+                            <div className="flex justify-end pt-4 border-t border-white/10 mt-4">
                                 <Button type="submit"><Save className="w-4 h-4 mr-2"/> Save Changes</Button>
                             </div>
                         </form>
@@ -487,3 +490,4 @@ export default function TimetablePage() {
         </>
     );
 }
+
