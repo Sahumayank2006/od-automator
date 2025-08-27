@@ -1,6 +1,67 @@
 
 import type { TimetableData } from "@/app/timetable/page";
 
+const btechCse1A_Timetable: TimetableData = {
+    course: 'B.Tech',
+    program: 'CSE',
+    semester: '1',
+    section: 'A',
+    schedule: {
+        Monday: [
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'Programming for Problem Solving', subjectCode: 'CSE 104', facultyName: 'Dr. C.S. Raghuvans', facultyCode: 'CSR' },
+            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'Basic Mechanical Engineering', subjectCode: 'BME 101', facultyName: 'Dr. Anshul Gangele', facultyCode: 'ASL' },
+            { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'Environmental Studies - I', subjectCode: 'EVS 142', facultyName: 'Dr. Rwitabrata M', facultyCode: 'RWM' },
+            { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'LUNCH', subjectCode: '', facultyName: '', facultyCode: '' },
+            { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
+            { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'French - I', subjectCode: 'FLU 144', facultyName: 'Mr. K. Muthuvel', facultyCode: 'KMU' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'Communication Skills - I', subjectCode: 'BCU 141', facultyName: 'Dr. Monika Saxeni', facultyCode: 'MKS' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'Applied Physics - I', subjectCode: 'PHY 101', facultyName: 'Dr. Nirbhay Singh', facultyCode: 'NBS' },
+        ],
+        Tuesday: [
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'Applied Mathematics - I', subjectCode: 'MAT 101', facultyName: 'Dr. Santosh Kr Sharma', facultyCode: 'SNT' },
+            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'Applied Physics - I', subjectCode: 'PHY 101', facultyName: 'Dr. Nirbhay Singh', facultyCode: 'NBS' },
+            { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'LIBRARY/CCA', subjectCode: 'LIBRARY/CCA', facultyName: '', facultyCode: '' },
+            { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'LUNCH', subjectCode: '', facultyName: '', facultyCode: '' },
+            { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
+            { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'Basic Civil Engineering Applied Mechanics', subjectCode: 'CIV 101', facultyName: 'Dr. P. Mahakavi', facultyCode: 'PMK' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'Communication Skills - I', subjectCode: 'BCU 141', facultyName: 'Dr. Monika Saxeni', facultyCode: 'MKS' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'LIBRARY/CCA', subjectCode: 'LIBRARY/CCA', facultyName: '', facultyCode: '' },
+        ],
+        Wednesday: [
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'Programming for Problem Solving', subjectCode: 'CSE 104', facultyName: 'Dr. C.S. Raghuvans', facultyCode: 'CSR' },
+            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'Workshop/Manufacturing Practices Lab', subjectCode: 'BME 124', facultyName: 'Dr. Susheel Pandey', facultyCode: 'SHP' },
+            { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'Programming for Problem Solving Lab', subjectCode: 'CSE 124', facultyName: 'Dr. C.S. Raghuvans', facultyCode: 'CSR' },
+            { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'LUNCH', subjectCode: '', facultyName: '', facultyCode: '' },
+            { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
+            { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'Environmental Studies - I', subjectCode: 'EVS 142', facultyName: 'Dr. Rwitabrata M', facultyCode: 'RWM' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'Applied Mathematics - I', subjectCode: 'MAT 101', facultyName: 'Dr. Santosh Kr Sharma', facultyCode: 'SNT' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'Basic Mechanical Engineering', subjectCode: 'BME 101', facultyName: 'Dr. Anshul Gangele', facultyCode: 'ASL' },
+        ],
+        Thursday: [
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'Applied Physics - I', subjectCode: 'PHY 101', facultyName: 'Dr. Nirbhay Singh', facultyCode: 'NBS' },
+            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'Programming for Problem Solving', subjectCode: 'CSE 104', facultyName: 'Dr. C.S. Raghuvans', facultyCode: 'CSR' },
+            { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'Behavioural Science - I', subjectCode: 'BSU 143', facultyName: 'Dr. Yukti', facultyCode: 'YKT' },
+            { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'LUNCH', subjectCode: '', facultyName: '', facultyCode: '' },
+            { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
+            { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'Programming for Problem Solving Lab', subjectCode: 'CSE 124', facultyName: 'Dr. C.S. Raghuvans', facultyCode: 'CSR' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'Workshop/Manufacturing Practices Lab', subjectCode: 'BME 124', facultyName: 'Dr. Susheel Pandey', facultyCode: 'SHP' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'Applied Mathematics - I', subjectCode: 'MAT 101', facultyName: 'Dr. Santosh Kr Sharma', facultyCode: 'SNT' },
+        ],
+        Friday: [
+            { id: 'L1', fromTime: '09:15', toTime: '10:10', subjectName: 'Applied Physics - I', subjectCode: 'PHY 101', facultyName: 'Dr. Nirbhay Singh', facultyCode: 'NBS' },
+            { id: 'L2', fromTime: '10:15', toTime: '11:10', subjectName: 'Applied Physics Lab - I', subjectCode: 'PHY 121', facultyName: 'Dr. Nirbhay Singh', facultyCode: 'NBS' },
+            { id: 'L3', fromTime: '11:15', toTime: '12:10', subjectName: 'LIBRARY/CCA', subjectCode: 'LIBRARY/CCA', facultyName: '', facultyCode: '' },
+            { id: 'L4', fromTime: '12:15', toTime: '13:10', subjectName: 'LUNCH', subjectCode: '', facultyName: '', facultyCode: '' },
+            { id: 'LUNCH', fromTime: '13:10', toTime: '14:10' },
+            { id: 'L5', fromTime: '14:15', toTime: '15:10', subjectName: 'Applied Mathematics - I', subjectCode: 'MAT 101', facultyName: 'Dr. Santosh Kr Sharma', facultyCode: 'SNT' },
+            { id: 'L6', fromTime: '15:15', toTime: '16:10', subjectName: 'Basic Mechanical Engineering', subjectCode: 'BME 101', facultyName: 'Dr. Anshul Gangele', facultyCode: 'ASL' },
+            { id: 'L7', fromTime: '16:15', toTime: '17:10', subjectName: 'LIBRARY/CCA', subjectCode: 'LIBRARY/CCA', facultyName: '', facultyCode: '' },
+        ],
+        Saturday: [],
+        Sunday: [],
+    },
+};
+
 const btechCse3A_Timetable: TimetableData = {
     course: 'B.Tech',
     program: 'CSE',
@@ -185,7 +246,10 @@ const btechCse3C_Timetable: TimetableData = {
 };
 
 export const defaultTimetables: Record<string, TimetableData> = {
+    'B.Tech-CSE-1-A': btechCse1A_Timetable,
     'B.Tech-CSE-3-A': btechCse3A_Timetable,
     'B.Tech-CSE-3-B': btechCse3B_Timetable,
     'B.Tech-CSE-3-C': btechCse3C_Timetable,
 };
+
+    
