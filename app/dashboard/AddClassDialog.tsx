@@ -76,7 +76,7 @@ interface AddClassDialogProps {
 export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, studentData, initialData }: AddClassDialogProps) {
     const { toast } = useToast();
     const [isLectureModalOpen, setIsLectureModalOpen] = useState(false);
-    const [editingLecture, setEditingLecture] = useState<Partial<LectureFormValues> & { course?: string, semester?: string } | undefined>(undefined);
+    const [editingLecture, setEditingLecture] = useState<Partial<LectureFormValues> & { course?: string, program?: string, semester?: string } | undefined>(undefined);
     const [isAutofilling, setIsAutofilling] = useState(false);
 
     const form = useForm<ClassFormValues>({
@@ -115,11 +115,12 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
 
     const handleAutofillStudents = () => {
         const classCourse = form.getValues('course');
+        const classProgram = form.getValues('program');
         const classSection = form.getValues('section');
         const classSemester = form.getValues('semester');
 
-        if (!classCourse || !classSemester) {
-            toast({ variant: 'destructive', title: "Class details missing", description: "Please select a course and semester before autofilling students." });
+        if (!classCourse || !classProgram || !classSemester) {
+            toast({ variant: 'destructive', title: "Class details missing", description: "Please select a course, program, and semester before autofilling students." });
             return;
         }
 
@@ -131,10 +132,11 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
         const sectionStudents = studentData.filter(s => 
             s.section === classSection && 
             s.course.toLowerCase() === classCourse.toLowerCase() &&
+            s.program.toLowerCase() === classProgram.toLowerCase() &&
             s.semester === classSemester
         );
         if (sectionStudents.length === 0) {
-            toast({ variant: 'destructive', title: "No Matching Students", description: `No students found for ${classCourse} Semester ${classSemester} Section ${classSection} in the loaded CSV.` });
+            toast({ variant: 'destructive', title: "No Matching Students", description: `No students found for ${classCourse} ${classProgram} Sem ${classSemester} Sec ${classSection} in the loaded CSV.` });
             return;
         }
 
@@ -149,7 +151,7 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
         }));
 
         form.setValue('lectures', updatedLectures, { shouldValidate: true, shouldDirty: true });
-        toast({ title: "Students Autofilled", description: `${sectionStudents.length} students from ${classCourse} Sem ${classSemester} Sec ${classSection} have been added to all lectures.` });
+        toast({ title: "Students Autofilled", description: `${sectionStudents.length} students from ${classCourse} ${classProgram} Sem ${classSemester} Sec ${classSection} have been added to all lectures.` });
     };
 
     const handleAutofill = async () => {
@@ -195,8 +197,9 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
                 return;
             };
 
-            const conflictingLectures = daySchedule.filter(lecture => {
-                if (!lecture.fromTime || !lecture.toTime || !lecture.subjectName || lecture.subjectName.toUpperCase().includes('LIBRARY') || lecture.subjectName.toUpperCase().includes('CCA')) return false;
+            const conflictingLectures: any[] = [];
+            daySchedule.forEach(lecture => {
+                if (!lecture.fromTime || !lecture.toTime || !lecture.subjectName || lecture.subjectName.toUpperCase().includes('LIBRARY') || lecture.subjectName.toUpperCase().includes('CCA')) return;
                 
                 const lectureStartMinutes = timeToMinutes(lecture.fromTime);
                 const lectureEndMinutes = timeToMinutes(lecture.toTime);
@@ -205,26 +208,40 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
                 const overlapEnd = Math.min(eventEndMinutes, lectureEndMinutes);
                 const overlapDuration = overlapEnd - overlapStart;
 
-                return overlapDuration >= 15;
+                if (overlapDuration >= 15) {
+                    conflictingLectures.push({
+                        id: crypto.randomUUID(),
+                        subject: `${lecture.subjectName} | ${lecture.subjectCode}`,
+                        faculty: `${lecture.facultyName}${lecture.facultyCode ? ` | ${lecture.facultyCode}` : ''}`,
+                        fromTime: lecture.fromTime,
+                        toTime: lecture.toTime,
+                        students: '',
+                        section: section,
+                    });
+
+                    // If it's a split lab, add the second lab as well
+                    if (lecture.isSplit && lecture.subjectName2) {
+                         conflictingLectures.push({
+                            id: crypto.randomUUID(),
+                            subject: `${lecture.subjectName2} | ${lecture.subjectCode2}`,
+                            faculty: `${lecture.facultyName2}${lecture.facultyCode2 ? ` | ${lecture.facultyCode2}` : ''}`,
+                            fromTime: lecture.fromTime,
+                            toTime: lecture.toTime,
+                            students: '',
+                            section: section,
+                        });
+                    }
+                }
             });
+
 
             if (conflictingLectures.length === 0) {
                 toast({ title: "No Conflicts", description: "No lectures conflict with the specified event time for 15 minutes or more." });
                 setIsAutofilling(false);
                 return;
             }
-
-            const newLectures = conflictingLectures.map(lec => ({
-                id: crypto.randomUUID(),
-                subject: `${lec.subjectName} | ${lec.subjectCode}`,
-                faculty: `${lec.facultyName}${lec.facultyCode ? ` | ${lec.facultyCode}` : ''}`,
-                fromTime: lec.fromTime,
-                toTime: lec.toTime,
-                students: '',
-                section: section,
-            }));
             
-            form.setValue('lectures', newLectures, { shouldValidate: true });
+            form.setValue('lectures', conflictingLectures, { shouldValidate: true });
 
             toast({ title: "Lectures Autofilled", description: `${conflictingLectures.length} conflicting lectures have been added.` });
         } catch (error) {
@@ -254,16 +271,18 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
     const handleEditLecture = (lecture: LectureFormValues) => {
         const classSection = form.getValues('section');
         const classCourse = form.getValues('course');
+        const classProgram = form.getValues('program');
         const classSemester = form.getValues('semester');
-        setEditingLecture({ ...lecture, section: classSection, course: classCourse, semester: classSemester });
+        setEditingLecture({ ...lecture, section: classSection, course: classCourse, program: classProgram, semester: classSemester });
         setIsLectureModalOpen(true);
     }
     
     const handleAddNewLecture = () => {
         const classSection = form.getValues('section');
         const classCourse = form.getValues('course');
+        const classProgram = form.getValues('program');
         const classSemester = form.getValues('semester');
-        setEditingLecture({ section: classSection, course: classCourse, semester: classSemester });
+        setEditingLecture({ section: classSection, course: classCourse, program: classProgram, semester: classSemester });
         setIsLectureModalOpen(true);
     };
 

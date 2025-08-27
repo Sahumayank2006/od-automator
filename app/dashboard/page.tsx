@@ -34,9 +34,10 @@ import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, User, Building, LogOu
 export interface StudentData {
   name: string;
   enrollment: string;
-  section: string;
   course: string;
+  program: string;
   semester: string;
+  section: string;
 }
 
 const lectureSchema = z.object({
@@ -137,18 +138,19 @@ export default function DashboardPage() {
               const students = results.data
                 .map(row => ({
                   name: (row as any).name?.trim(),
-                  enrollment: (row as any)['enrolment no.']?.trim() || (row as any).enrollment?.trim(),
-                  section: (row as any).section?.trim().toUpperCase(),
+                  enrollment: (row as any).enrollment?.trim() || (row as any)['enrolment no.']?.trim(),
                   course: (row as any).course?.trim(),
+                  program: (row as any).program?.trim(),
                   semester: (row as any).semester?.trim(),
+                  section: (row as any).section?.trim().toUpperCase(),
                 }))
-                .filter(student => student.name && student.enrollment && student.section && student.course && student.semester);
+                .filter(student => student.name && student.enrollment && student.course && student.program && student.semester && student.section);
     
               if (students.length === 0) {
                 toast({
                   variant: 'destructive',
                   title: 'No Students Found',
-                  description: 'Could not find valid student data in the CSV. Required columns: name, enrolment no., section, course, semester.',
+                  description: 'Could not find valid student data in the CSV. Required columns: name, enrollment, course, program, semester, section.',
                 });
                 return;
               }
@@ -162,7 +164,7 @@ export default function DashboardPage() {
                toast({
                   variant: 'destructive',
                   title: 'CSV Parsing Error',
-                  description: 'Please check the CSV format. Required columns: name, enrolment no., section, course, semester.',
+                  description: 'Please check the CSV format. Required columns: name, enrollment, course, program, semester, section.',
                 });
             }
           },
@@ -553,6 +555,7 @@ export default function DashboardPage() {
                                                         <TableHead>Name</TableHead>
                                                         <TableHead>Enrollment No.</TableHead>
                                                         <TableHead>Course</TableHead>
+                                                        <TableHead>Program</TableHead>
                                                         <TableHead>Semester</TableHead>
                                                         <TableHead>Section</TableHead>
                                                     </TableRow>
@@ -563,6 +566,7 @@ export default function DashboardPage() {
                                                             <TableCell>{student.name}</TableCell>
                                                             <TableCell>{student.enrollment}</TableCell>
                                                             <TableCell>{student.course}</TableCell>
+                                                            <TableCell>{student.program}</TableCell>
                                                             <TableCell>{student.semester}</TableCell>
                                                             <TableCell>{student.section}</TableCell>
                                                         </TableRow>
@@ -627,3 +631,5 @@ export default function DashboardPage() {
         </FormProvider>
     );
 }
+
+    
