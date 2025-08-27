@@ -36,6 +36,7 @@ export interface StudentData {
   enrollment: string;
   section: string;
   course: string;
+  program: string;
   semester: string;
 }
 
@@ -140,15 +141,16 @@ export default function DashboardPage() {
                   enrollment: (row as any)['enrolment no.']?.trim() || (row as any).enrollment?.trim(),
                   section: (row as any).section?.trim().toUpperCase(),
                   course: (row as any).course?.trim(),
+                  program: (row as any).program?.trim(),
                   semester: (row as any).semester?.trim(),
                 }))
-                .filter(student => student.name && student.enrollment && student.section && student.course && student.semester);
+                .filter(student => student.name && student.enrollment && student.section && student.course && student.program && student.semester);
     
               if (students.length === 0) {
                 toast({
                   variant: 'destructive',
                   title: 'No Students Found',
-                  description: 'Could not find valid student data in the CSV. Required columns: name, enrolment no., section, course, semester.',
+                  description: 'Could not find valid student data in the CSV. Required columns: name, enrolment no., section, course, program, semester.',
                 });
                 return;
               }
@@ -162,7 +164,7 @@ export default function DashboardPage() {
                toast({
                   variant: 'destructive',
                   title: 'CSV Parsing Error',
-                  description: 'Please check the CSV format. Required columns: name, enrolment no., section, course, semester.',
+                  description: 'Please check the CSV format. Required columns: name, enrolment no., section, course, program, semester.',
                 });
             }
           },
@@ -553,6 +555,7 @@ export default function DashboardPage() {
                                                         <TableHead>Name</TableHead>
                                                         <TableHead>Enrollment No.</TableHead>
                                                         <TableHead>Course</TableHead>
+                                                        <TableHead>Program</TableHead>
                                                         <TableHead>Semester</TableHead>
                                                         <TableHead>Section</TableHead>
                                                     </TableRow>
@@ -563,6 +566,7 @@ export default function DashboardPage() {
                                                             <TableCell>{student.name}</TableCell>
                                                             <TableCell>{student.enrollment}</TableCell>
                                                             <TableCell>{student.course}</TableCell>
+                                                            <TableCell>{student.program}</TableCell>
                                                             <TableCell>{student.semester}</TableCell>
                                                             <TableCell>{student.section}</TableCell>
                                                         </TableRow>

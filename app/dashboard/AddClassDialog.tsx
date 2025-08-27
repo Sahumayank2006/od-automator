@@ -76,7 +76,7 @@ interface AddClassDialogProps {
 export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, studentData, initialData }: AddClassDialogProps) {
     const { toast } = useToast();
     const [isLectureModalOpen, setIsLectureModalOpen] = useState(false);
-    const [editingLecture, setEditingLecture] = useState<Partial<LectureFormValues> & { course?: string, semester?: string } | undefined>(undefined);
+    const [editingLecture, setEditingLecture] = useState<Partial<LectureFormValues> & { course?: string, program?: string, semester?: string } | undefined>(undefined);
     const [isAutofilling, setIsAutofilling] = useState(false);
 
     const form = useForm<ClassFormValues>({
@@ -115,11 +115,12 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
 
     const handleAutofillStudents = () => {
         const classCourse = form.getValues('course');
+        const classProgram = form.getValues('program');
         const classSection = form.getValues('section');
         const classSemester = form.getValues('semester');
 
-        if (!classCourse || !classSemester) {
-            toast({ variant: 'destructive', title: "Class details missing", description: "Please select a course and semester before autofilling students." });
+        if (!classCourse || !classProgram || !classSemester) {
+            toast({ variant: 'destructive', title: "Class details missing", description: "Please select a course, program, and semester before autofilling students." });
             return;
         }
 
@@ -131,10 +132,11 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
         const sectionStudents = studentData.filter(s => 
             s.section === classSection && 
             s.course.toLowerCase() === classCourse.toLowerCase() &&
+            s.program.toLowerCase() === classProgram.toLowerCase() &&
             s.semester === classSemester
         );
         if (sectionStudents.length === 0) {
-            toast({ variant: 'destructive', title: "No Matching Students", description: `No students found for ${classCourse} Semester ${classSemester} Section ${classSection} in the loaded CSV.` });
+            toast({ variant: 'destructive', title: "No Matching Students", description: `No students found for ${classCourse} ${classProgram} Sem ${classSemester} Sec ${classSection} in the loaded CSV.` });
             return;
         }
 
@@ -149,7 +151,7 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
         }));
 
         form.setValue('lectures', updatedLectures, { shouldValidate: true, shouldDirty: true });
-        toast({ title: "Students Autofilled", description: `${sectionStudents.length} students from ${classCourse} Sem ${classSemester} Sec ${classSection} have been added to all lectures.` });
+        toast({ title: "Students Autofilled", description: `${sectionStudents.length} students from ${classCourse} ${classProgram} Sem ${classSemester} Sec ${classSection} have been added to all lectures.` });
     };
 
     const handleAutofill = async () => {
@@ -269,16 +271,18 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
     const handleEditLecture = (lecture: LectureFormValues) => {
         const classSection = form.getValues('section');
         const classCourse = form.getValues('course');
+        const classProgram = form.getValues('program');
         const classSemester = form.getValues('semester');
-        setEditingLecture({ ...lecture, section: classSection, course: classCourse, semester: classSemester });
+        setEditingLecture({ ...lecture, section: classSection, course: classCourse, program: classProgram, semester: classSemester });
         setIsLectureModalOpen(true);
     }
     
     const handleAddNewLecture = () => {
         const classSection = form.getValues('section');
         const classCourse = form.getValues('course');
+        const classProgram = form.getValues('program');
         const classSemester = form.getValues('semester');
-        setEditingLecture({ section: classSection, course: classCourse, semester: classSemester });
+        setEditingLecture({ section: classSection, course: classCourse, program: classProgram, semester: classSemester });
         setIsLectureModalOpen(true);
     };
 
