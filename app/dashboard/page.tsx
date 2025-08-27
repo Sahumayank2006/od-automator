@@ -12,6 +12,7 @@ import { AddClassDialog } from './AddClassDialog';
 import { Loader2, Upload, Eye, FileUp } from 'lucide-react';
 import { saveOdRequest, ODRequest } from '@/lib/database';
 import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { app } from '@/lib/firebase';
 
@@ -123,6 +124,42 @@ export default function DashboardPage() {
     const [uploadedPdfUrl, setUploadedPdfUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const processStudentData = (data: any[]) => {
+        try {
+            const students = data
+              .map(row => ({
+                name: (row as any).name?.trim(),
+                enrollment: String((row as any).enrollment || (row as any)['enrolment no.']).trim(),
+                course: (row as any).course?.trim(),
+                program: (row as any).program?.trim(),
+                semester: String((row as any).semester).trim(),
+                section: (row as any).section?.trim().toUpperCase(),
+              }))
+              .filter(student => student.name && student.enrollment && student.course && student.program && student.semester && student.section);
+  
+            if (students.length === 0) {
+              toast({
+                variant: 'destructive',
+                title: 'No Valid Students Found',
+                description: 'Could not find valid student data. Required columns: name, enrollment, course, program, semester, section.',
+              });
+              return;
+            }
+            
+            setStudentData(students);
+            toast({
+              title: 'Import Successful',
+              description: `${students.length} students have been loaded.`,
+            });
+          } catch (error) {
+             toast({
+                variant: 'destructive',
+                title: 'File Parsing Error',
+                description: 'Please check the file format. Required columns: name, enrollment, course, program, semester, section.',
+              });
+          }
+    };
+
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) {
@@ -130,52 +167,35 @@ export default function DashboardPage() {
           return;
         }
 
-        Papa.parse(file, {
-          header: true,
-          skipEmptyLines: true,
-          complete: (results) => {
-            try {
-              const students = results.data
-                .map(row => ({
-                  name: (row as any).name?.trim(),
-                  enrollment: (row as any).enrollment?.trim() || (row as any)['enrolment no.']?.trim(),
-                  course: (row as any).course?.trim(),
-                  program: (row as any).program?.trim(),
-                  semester: (row as any).semester?.trim(),
-                  section: (row as any).section?.trim().toUpperCase(),
-                }))
-                .filter(student => student.name && student.enrollment && student.course && student.program && student.semester && student.section);
-    
-              if (students.length === 0) {
-                toast({
-                  variant: 'destructive',
-                  title: 'No Students Found',
-                  description: 'Could not find valid student data in the CSV. Required columns: name, enrollment, course, program, semester, section.',
-                });
-                return;
-              }
-              
-              setStudentData(students);
-              toast({
-                title: 'Import Successful',
-                description: `${students.length} students have been loaded from the CSV.`,
-              });
-            } catch (error) {
-               toast({
-                  variant: 'destructive',
-                  title: 'CSV Parsing Error',
-                  description: 'Please check the CSV format. Required columns: name, enrollment, course, program, semester, section.',
-                });
-            }
-          },
-          error: (error) => {
-            toast({
-              variant: 'destructive',
-              title: 'File Read Error',
-              description: error.message,
-            });
-          }
-        });
+        const reader = new FileReader();
+        
+        if (file.name.endsWith('.csv')) {
+            reader.onload = (e) => {
+                const text = e.target?.result;
+                if (typeof text === 'string') {
+                    Papa.parse(text, {
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: (results) => processStudentData(results.data),
+                        error: (error) => toast({ variant: 'destructive', title: 'CSV Error', description: error.message }),
+                    });
+                }
+            };
+            reader.readAsText(file);
+        } else if (file.name.endsWith('.xlsx')) {
+            reader.onload = (e) => {
+                const data = e.target?.result;
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
+                processStudentData(json);
+            };
+            reader.readAsArrayBuffer(file);
+        } else {
+            toast({ variant: 'destructive', title: 'Unsupported File Type', description: 'Please upload a .csv or .xlsx file.' });
+        }
+
 
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
@@ -534,9 +554,12 @@ export default function DashboardPage() {
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-4">
                                         <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
-                                            <Upload className="w-4 h-4 mr-2" /> Load Student Data from CSV
+                                            <Upload className="w-4 h-4 mr-2" /> Load Student Data (CSV or XLSX)
                                         </Button>
-                                        <a href="/sample.csv" download>
+                                        <a href="/sample.xlsx" download>
+                                            <Button type="button" variant="link">Download Sample XLSX</Button>
+                                        </a>
+                                         <a href="/sample.csv" download>
                                             <Button type="button" variant="link">Download Sample CSV</Button>
                                         </a>
                                         <input
@@ -544,7 +567,7 @@ export default function DashboardPage() {
                                             ref={fileInputRef}
                                             onChange={handleFileUpload}
                                             className="hidden"
-                                            accept=".csv"
+                                            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
                                         />
                                     </div>
                                     {studentData.length > 0 ? (
@@ -577,7 +600,7 @@ export default function DashboardPage() {
                                     ) : (
                                         <div className="text-center py-8 text-muted-foreground bg-background/30 rounded-lg">
                                             <p>No student data loaded.</p>
-                                            <p className="text-sm">Click the button to load a student CSV file.</p>
+                                            <p className="text-sm">Click the button to load a student CSV or XLSX file.</p>
                                         </div>
                                     )}
                                 </div>
