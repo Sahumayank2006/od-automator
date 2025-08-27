@@ -4,8 +4,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { format, addMinutes } from 'date-fns';
+import Papa from 'papaparse';
+
 
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -14,7 +16,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { BookOpen, User, Clock, Save } from 'lucide-react';
+import { BookOpen, User, Clock, Save, Upload } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -23,6 +26,7 @@ const lectureSchema = z.object({
   fromTime: z.string().min(1, "Start time is required."),
   toTime: z.string().min(1, "End time is required."),
   students: z.string().min(1, "Student list is required."),
+  section: z.string().optional(), // Add section to the schema for filtering
 });
 
 export type LectureFormValues = z.infer<typeof lectureSchema>;
@@ -37,6 +41,9 @@ interface LectureEditDialogProps {
 }
 
 export function LectureEditDialog({ open, onOpenChange, onSave, initialData }: LectureEditDialogProps) {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const form = useForm<LectureFormValues>({
     resolver: zodResolver(lectureSchema),
     defaultValues: {
@@ -46,6 +53,7 @@ export function LectureEditDialog({ open, onOpenChange, onSave, initialData }: L
       fromTime: '',
       toTime: '',
       students: '',
+      section: initialData?.section || '',
     },
     mode: 'onChange',
   });
@@ -59,6 +67,7 @@ export function LectureEditDialog({ open, onOpenChange, onSave, initialData }: L
         fromTime: initialData?.fromTime || '',
         toTime: initialData?.toTime || '',
         students: initialData?.students || '',
+        section: initialData?.section || '',
       });
     }
   }, [open, initialData, form]);
@@ -74,6 +83,75 @@ export function LectureEditDialog({ open, onOpenChange, onSave, initialData }: L
       form.setValue('toTime', toTime, { shouldValidate: true, shouldDirty: true });
     }
   };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      toast({ variant: 'destructive', title: 'No file selected' });
+      return;
+    }
+
+    const currentSection = initialData?.section;
+    if (!currentSection) {
+      toast({ variant: 'destructive', title: 'Section not defined', description: 'Cannot import students without a class section.' });
+      return;
+    }
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        try {
+          const students = results.data
+            .map(row => ({
+              name: (row as any).name?.trim(),
+              enrollment: (row as any)['enrolment no.']?.trim() || (row as any).enrollment?.trim(),
+              section: (row as any).section?.trim(),
+            }))
+            .filter(student => student.section?.toUpperCase() === currentSection.toUpperCase() && student.name && student.enrollment);
+
+          if (students.length === 0) {
+            toast({
+              variant: 'destructive',
+              title: 'No Students Found',
+              description: `Could not find any students for Section ${currentSection} in the CSV.`,
+            });
+            return;
+          }
+
+          const studentListString = students
+            .map(s => `${s.name} ${s.enrollment}`)
+            .join('\n');
+          
+          form.setValue('students', studentListString, { shouldValidate: true, shouldDirty: true });
+          
+          toast({
+            title: 'Import Successful',
+            description: `${students.length} students from Section ${currentSection} have been imported.`,
+          });
+        } catch (error) {
+           toast({
+              variant: 'destructive',
+              title: 'CSV Parsing Error',
+              description: 'Please check the CSV format. Required columns: name, enrolment no., section.',
+            });
+        }
+      },
+      error: (error) => {
+        toast({
+          variant: 'destructive',
+          title: 'File Read Error',
+          description: error.message,
+        });
+      }
+    });
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
 
   const onSubmit = (data: LectureFormValues) => {
     onSave(data);
@@ -154,9 +232,21 @@ export function LectureEditDialog({ open, onOpenChange, onSave, initialData }: L
                     name="students"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center"><User className="w-4 h-4 mr-2" />Student List</FormLabel>
+                        <div className="flex justify-between items-center">
+                          <FormLabel className="flex items-center"><User className="w-4 h-4 mr-2" />Student List</FormLabel>
+                          <Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                            <Upload className="w-4 h-4 mr-2" /> Import from CSV
+                          </Button>
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileUpload}
+                            className="hidden"
+                            accept=".csv"
+                          />
+                        </div>
                         <FormControl>
-                          <Textarea placeholder="Enter one student per line (Name + Enrollment No.)" {...field} className="min-h-[200px]" />
+                          <Textarea placeholder="Enter one student per line (Name + Enrollment No.) or import from CSV." {...field} className="min-h-[200px]" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

@@ -28,6 +28,7 @@ const lectureSchema = z.object({
   fromTime: z.string().min(1, "Start time is required."),
   toTime: z.string().min(1, "End time is required."),
   students: z.string().min(1, "Student list is required."),
+  section: z.string().optional(),
 });
 
 const classSchema = z.object({
@@ -72,7 +73,7 @@ interface AddClassDialogProps {
 export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: AddClassDialogProps) {
     const { toast } = useToast();
     const [isLectureModalOpen, setIsLectureModalOpen] = useState(false);
-    const [editingLecture, setEditingLecture] = useState<LectureFormValues | undefined>(undefined);
+    const [editingLecture, setEditingLecture] = useState<Partial<LectureFormValues> | undefined>(undefined);
     const [isAutofilling, setIsAutofilling] = useState(false);
 
     const form = useForm<ClassFormValues>({
@@ -164,7 +165,8 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
                 faculty: `${lec.facultyName}${lec.facultyCode ? ` | ${lec.facultyCode}` : ''}`,
                 fromTime: lec.fromTime,
                 toTime: lec.toTime,
-                students: ''
+                students: '',
+                section: section,
             }));
             
             form.setValue('lectures', newLectures, { shouldValidate: true });
@@ -180,24 +182,29 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
     const handleSaveLecture = (lectureData: LectureFormValues) => {
         const currentLectures = form.getValues('lectures');
         const existingIndex = currentLectures.findIndex(l => l.id === lectureData.id);
+        const classSection = form.getValues('section');
+
+        const dataToSave = { ...lectureData, section: classSection };
 
         if (existingIndex > -1) {
-            currentLectures[existingIndex] = lectureData;
+            currentLectures[existingIndex] = dataToSave;
             form.setValue('lectures', [...currentLectures], { shouldValidate: true });
             toast({ title: 'Lecture Updated', description: `Details for ${lectureData.subject} have been updated.`});
         } else {
-            form.setValue('lectures', [...currentLectures, lectureData], { shouldValidate: true });
+            form.setValue('lectures', [...currentLectures, dataToSave], { shouldValidate: true });
             toast({ title: 'Lecture Added', description: `${lectureData.subject} has been added.`});
         }
     };
     
     const handleEditLecture = (lecture: LectureFormValues) => {
-        setEditingLecture(lecture);
+        const classSection = form.getValues('section');
+        setEditingLecture({ ...lecture, section: classSection });
         setIsLectureModalOpen(true);
     }
     
     const handleAddNewLecture = () => {
-        setEditingLecture(undefined);
+        const classSection = form.getValues('section');
+        setEditingLecture({ section: classSection });
         setIsLectureModalOpen(true);
     };
 
@@ -278,7 +285,7 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
                                                         <p className="text-xs text-muted-foreground truncate">{lecture.faculty} &bull; {lecture.fromTime} - {lecture.toTime}</p>
                                                     </div>
                                                     <div className="flex gap-2">
-                                                        <Button type="button" size="icon" variant="ghost" onClick={() => handleEditLecture(lecture)}><Edit className="w-4 h-4" /></Button>
+                                                        <Button type="button" size="icon" variant="ghost" onClick={() => handleEditLecture(lecture as LectureFormValues)}><Edit className="w-4 h-4" /></Button>
                                                         <Button type="button" size="icon" variant="destructive" onClick={() => handleRemoveLecture(lecture.id)}><Trash2 className="w-4 h-4"/></Button>
                                                     </div>
                                                 </div>
