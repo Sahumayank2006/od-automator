@@ -16,10 +16,11 @@ import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TimetableData } from '../timetable/page';
 import { defaultTimetables } from '@/lib/timetables';
-import { PlusCircle, Trash2, BookOpen, Save, Bot, Edit, FileText } from 'lucide-react';
+import { PlusCircle, Trash2, BookOpen, Save, Bot, Edit, FileText, Users } from 'lucide-react';
 import { LectureEditDialog, type LectureFormValues } from './LectureEditDialog';
 import { loadAllTimetables } from '@/lib/database';
 import { Loader2 } from 'lucide-react';
+import type { StudentData } from './page';
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -68,9 +69,10 @@ interface AddClassDialogProps {
     eventFromTime?: string;
     eventToTime?: string;
   };
+  studentData: StudentData[];
 }
 
-export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: AddClassDialogProps) {
+export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, studentData }: AddClassDialogProps) {
     const { toast } = useToast();
     const [isLectureModalOpen, setIsLectureModalOpen] = useState(false);
     const [editingLecture, setEditingLecture] = useState<Partial<LectureFormValues> | undefined>(undefined);
@@ -95,6 +97,33 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
       if (!time || !time.includes(':')) return 0;
       const [hours, minutes] = time.split(':').map(Number);
       return hours * 60 + minutes;
+    };
+
+    const handleAutofillStudents = () => {
+        const classSection = form.getValues('section');
+        if (studentData.length === 0) {
+            toast({ variant: 'destructive', title: "No Student Data", description: "Please load student data from a CSV on the main page first." });
+            return;
+        }
+
+        const sectionStudents = studentData.filter(s => s.section === classSection);
+        if (sectionStudents.length === 0) {
+            toast({ variant: 'destructive', title: "No Matching Students", description: `No students found for section ${classSection} in the loaded CSV.` });
+            return;
+        }
+
+        const studentListString = sectionStudents
+            .map(s => `${s.name} ${s.enrollment}`)
+            .join('\n');
+            
+        const currentLectures = form.getValues('lectures');
+        const updatedLectures = currentLectures.map(lec => ({
+            ...lec,
+            students: studentListString
+        }));
+
+        form.setValue('lectures', updatedLectures, { shouldValidate: true, shouldDirty: true });
+        toast({ title: "Students Autofilled", description: `${sectionStudents.length} students from section ${classSection} have been added to all lectures.` });
     };
 
     const handleAutofill = async () => {
@@ -241,6 +270,7 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
                 onOpenChange={setIsLectureModalOpen}
                 onSave={handleSaveLecture}
                 initialData={editingLecture}
+                studentData={studentData}
             />
             <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) form.reset(); onOpenChange(isOpen); }}>
                 <DialogContent className="max-w-4xl h-[90vh] flex flex-col bg-secondary border-primary/50">
@@ -261,12 +291,16 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails }: Add
                             <div className="flex-1 flex flex-col min-h-0 border-t border-white/10 pt-6 mt-6 px-1">
                                 <div className="flex flex-wrap justify-between items-center mb-4 gap-2 flex-shrink-0">
                                     <h4 className="text-md font-headline font-semibold flex items-center"><BookOpen className="w-5 h-5 mr-2 text-primary"/>Affected Lectures</h4>
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 flex-wrap">
+                                        <Button type="button" size="sm" onClick={handleAutofillStudents} disabled={lectures.length === 0}>
+                                            <Users className="w-4 h-4 mr-2" />
+                                            Autofill Students
+                                        </Button>
                                         <Button type="button" size="sm" onClick={handleAutofill} disabled={isAutofilling}>
                                             {isAutofilling ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Bot className="w-4 h-4 mr-2" />}
                                             Autofill Conflicts
                                         </Button>
-                                        <Button type="button" size="sm" variant="ghost" onClick={handleAddNewLecture}><PlusCircle className="mr-2 h-4 w-4"/>Add New Lecture</Button>
+                                        <Button type="button" size="sm" variant="ghost" onClick={handleAddNewLecture}><PlusCircle className="mr-2 h-4 w-4"/>Add Lecture</Button>
                                     </div>
                                 </div>
 

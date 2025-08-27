@@ -9,8 +9,9 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 import { sendEmail } from './actions';
 import { AddClassDialog } from './AddClassDialog';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload } from 'lucide-react';
 import { saveOdRequest } from '@/lib/database';
+import Papa from 'papaparse';
 
 
 import { Button } from '@/components/ui/button';
@@ -22,8 +23,16 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, User, Building, LogOut, GraduationCap, Table, ShieldCheck, BarChart3 } from 'lucide-react';
+
+import { CalendarIcon, PlusCircle, Trash2, Mail, FileText, User, Building, LogOut, GraduationCap, Table as TableIcon, ShieldCheck, BarChart3, Users } from 'lucide-react';
+
+export interface StudentData {
+  name: string;
+  enrollment: string;
+  section: string;
+}
 
 const lectureSchema = z.object({
   id: z.string(),
@@ -96,6 +105,64 @@ export default function DashboardPage() {
     const [isSending, setIsSending] = useState(false);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
+    const [studentData, setStudentData] = useState<StudentData[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) {
+          toast({ variant: 'destructive', title: 'No file selected' });
+          return;
+        }
+
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            try {
+              const students = results.data
+                .map(row => ({
+                  name: (row as any).name?.trim(),
+                  enrollment: (row as any)['enrolment no.']?.trim() || (row as any).enrollment?.trim(),
+                  section: (row as any).section?.trim().toUpperCase(),
+                }))
+                .filter(student => student.name && student.enrollment && student.section);
+    
+              if (students.length === 0) {
+                toast({
+                  variant: 'destructive',
+                  title: 'No Students Found',
+                  description: 'Could not find valid student data in the CSV. Required columns: name, enrolment no., section.',
+                });
+                return;
+              }
+              
+              setStudentData(students);
+              toast({
+                title: 'Import Successful',
+                description: `${students.length} students have been loaded from the CSV.`,
+              });
+            } catch (error) {
+               toast({
+                  variant: 'destructive',
+                  title: 'CSV Parsing Error',
+                  description: 'Please check the CSV format. Required columns: name, enrolment no., section.',
+                });
+            }
+          },
+          error: (error) => {
+            toast({
+              variant: 'destructive',
+              title: 'File Read Error',
+              description: error.message,
+            });
+          }
+        });
+
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+    };
     
     const form = useForm<ODFormValues>({
         resolver: zodResolver(odFormSchema),
@@ -266,6 +333,7 @@ export default function DashboardPage() {
                   eventFromTime: eventDetails[1],
                   eventToTime: eventDetails[2],
                 }}
+                studentData={studentData}
              />
             <ScrollArea className="h-screen bg-background">
                 <div className="max-w-7xl mx-auto space-y-8 pb-32 p-4 md:p-8">
@@ -276,7 +344,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
                             <Link href="/timetable" passHref>
-                                <Button variant="outline"><Table className="w-4 h-4 mr-2"/>Manage Timetable</Button>
+                                <Button variant="outline"><TableIcon className="w-4 h-4 mr-2"/>Manage Timetable</Button>
                             </Link>
                              <Link href="/faculty" passHref>
                                 <Button variant="outline"><ShieldCheck className="w-4 h-4 mr-2"/>Faculty Admin</Button>
@@ -372,6 +440,53 @@ export default function DashboardPage() {
                                     </div>
                                 </SectionPanel>
                             </div>
+
+                             <SectionPanel title="Student Data" icon={Users}>
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-4">
+                                        <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                                            <Upload className="w-4 h-4 mr-2" /> Load Student Data from CSV
+                                        </Button>
+                                        <a href="/sample.csv" download>
+                                            <Button type="button" variant="link">Download Sample CSV</Button>
+                                        </a>
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleFileUpload}
+                                            className="hidden"
+                                            accept=".csv"
+                                        />
+                                    </div>
+                                    {studentData.length > 0 ? (
+                                        <ScrollArea className="h-64 mt-4 border rounded-lg bg-background/30">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Name</TableHead>
+                                                        <TableHead>Enrollment No.</TableHead>
+                                                        <TableHead>Section</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {studentData.map((student, index) => (
+                                                        <TableRow key={index}>
+                                                            <TableCell>{student.name}</TableCell>
+                                                            <TableCell>{student.enrollment}</TableCell>
+                                                            <TableCell>{student.section}</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </ScrollArea>
+                                    ) : (
+                                        <div className="text-center py-8 text-muted-foreground bg-background/30 rounded-lg">
+                                            <p>No student data loaded.</p>
+                                            <p className="text-sm">Click the button to load a student CSV file.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </SectionPanel>
 
                             <SectionPanel title="Affected Classes" icon={Building}>
                                 <div className="space-y-4">
