@@ -195,8 +195,9 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
                 return;
             };
 
-            const conflictingLectures = daySchedule.filter(lecture => {
-                if (!lecture.fromTime || !lecture.toTime || !lecture.subjectName || lecture.subjectName.toUpperCase().includes('LIBRARY') || lecture.subjectName.toUpperCase().includes('CCA')) return false;
+            const conflictingLectures: any[] = [];
+            daySchedule.forEach(lecture => {
+                if (!lecture.fromTime || !lecture.toTime || !lecture.subjectName || lecture.subjectName.toUpperCase().includes('LIBRARY') || lecture.subjectName.toUpperCase().includes('CCA')) return;
                 
                 const lectureStartMinutes = timeToMinutes(lecture.fromTime);
                 const lectureEndMinutes = timeToMinutes(lecture.toTime);
@@ -205,26 +206,40 @@ export function AddClassDialog({ open, onOpenChange, onSave, eventDetails, stude
                 const overlapEnd = Math.min(eventEndMinutes, lectureEndMinutes);
                 const overlapDuration = overlapEnd - overlapStart;
 
-                return overlapDuration >= 15;
+                if (overlapDuration >= 15) {
+                    conflictingLectures.push({
+                        id: crypto.randomUUID(),
+                        subject: `${lecture.subjectName} | ${lecture.subjectCode}`,
+                        faculty: `${lecture.facultyName}${lecture.facultyCode ? ` | ${lecture.facultyCode}` : ''}`,
+                        fromTime: lecture.fromTime,
+                        toTime: lecture.toTime,
+                        students: '',
+                        section: section,
+                    });
+
+                    // If it's a split lab, add the second lab as well
+                    if (lecture.isSplit && lecture.subjectName2) {
+                         conflictingLectures.push({
+                            id: crypto.randomUUID(),
+                            subject: `${lecture.subjectName2} | ${lecture.subjectCode2}`,
+                            faculty: `${lecture.facultyName2}${lecture.facultyCode2 ? ` | ${lecture.facultyCode2}` : ''}`,
+                            fromTime: lecture.fromTime,
+                            toTime: lecture.toTime,
+                            students: '',
+                            section: section,
+                        });
+                    }
+                }
             });
+
 
             if (conflictingLectures.length === 0) {
                 toast({ title: "No Conflicts", description: "No lectures conflict with the specified event time for 15 minutes or more." });
                 setIsAutofilling(false);
                 return;
             }
-
-            const newLectures = conflictingLectures.map(lec => ({
-                id: crypto.randomUUID(),
-                subject: `${lec.subjectName} | ${lec.subjectCode}`,
-                faculty: `${lec.facultyName}${lec.facultyCode ? ` | ${lec.facultyCode}` : ''}`,
-                fromTime: lec.fromTime,
-                toTime: lec.toTime,
-                students: '',
-                section: section,
-            }));
             
-            form.setValue('lectures', newLectures, { shouldValidate: true });
+            form.setValue('lectures', conflictingLectures, { shouldValidate: true });
 
             toast({ title: "Lectures Autofilled", description: `${conflictingLectures.length} conflicting lectures have been added.` });
         } catch (error) {

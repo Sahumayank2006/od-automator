@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import Link from 'next/link';
-import { Home, Save, GraduationCap, Calendar, BookOpen, User, Tag, PlusCircle } from 'lucide-react';
+import { Home, Save, GraduationCap, Calendar, BookOpen, User, Tag, PlusCircle, Users } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { saveTimetable, loadAllTimetables } from '@/lib/database';
@@ -19,13 +19,31 @@ import { cn } from '@/lib/utils';
 import { Combobox } from '@/components/ui/combobox';
 import { defaultTimetables } from '@/lib/timetables';
 import { Loader2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
 
 const lectureFormSchema = z.object({
+  isSplit: z.boolean().default(false),
+  // Batch 1
   subjectName: z.string().min(1, 'Subject name is required.'),
   subjectCode: z.string().min(1, 'Subject code is required.'),
   facultyName: z.string().min(1, 'Faculty name is required.'),
   facultyCode: z.string().optional(),
+  // Batch 2 (optional)
+  subjectName2: z.string().optional(),
+  subjectCode2: z.string().optional(),
+  facultyName2: z.string().optional(),
+  facultyCode2: z.string().optional(),
+}).refine(data => {
+    if (data.isSplit) {
+        return !!data.subjectName2 && !!data.subjectCode2 && !!data.facultyName2;
+    }
+    return true;
+}, {
+    message: "Batch 2 details are required for a split lab session.",
+    path: ['subjectName2'],
 });
+
 
 type LectureFormValues = z.infer<typeof lectureFormSchema>;
 
@@ -33,10 +51,19 @@ export interface Lecture {
   id: string;
   fromTime: string;
   toTime: string;
+  
+  // Batch 1
   subjectName?: string;
   subjectCode?: string;
   facultyName?: string;
   facultyCode?: string;
+
+  // Batch 2
+  isSplit?: boolean;
+  subjectName2?: string;
+  subjectCode2?: string;
+  facultyName2?: string;
+  facultyCode2?: string;
 }
 
 export interface Schedule {
@@ -108,53 +135,89 @@ const SectionPanel = ({ title, icon: Icon, children, titleClassName }: { title: 
 );
 
 
-const LectureEditDialog = ({ open, onOpenChange, lecture, onSave }: { open: boolean, onOpenChange: (open: boolean) => void, lecture: Lecture, onSave: (values: LectureFormValues) => void }) => {
+const LectureEditDialog = ({ open, onOpenChange, lecture, onSave }: { open: boolean, onOpenChange: (open: boolean) => void, lecture: Lecture, onSave: (values: Lecture) => void }) => {
     const formMethods = useForm<LectureFormValues>({
         resolver: zodResolver(lectureFormSchema),
         defaultValues: {
+            isSplit: lecture.isSplit || false,
             subjectName: lecture.subjectName || '',
             subjectCode: lecture.subjectCode || '',
             facultyName: lecture.facultyName || '',
             facultyCode: lecture.facultyCode || '',
+            subjectName2: lecture.subjectName2 || '',
+            subjectCode2: lecture.subjectCode2 || '',
+            facultyName2: lecture.facultyName2 || '',
+            facultyCode2: lecture.facultyCode2 || '',
         },
     });
 
+    const isSplit = formMethods.watch('isSplit');
+
     useEffect(() => {
         formMethods.reset({
+            isSplit: lecture.isSplit || false,
             subjectName: lecture.subjectName || '',
             subjectCode: lecture.subjectCode || '',
             facultyName: lecture.facultyName || '',
             facultyCode: lecture.facultyCode || '',
+            subjectName2: lecture.subjectName2 || '',
+            subjectCode2: lecture.subjectCode2 || '',
+            facultyName2: lecture.facultyName2 || '',
+            facultyCode2: lecture.facultyCode2 || '',
         });
     }, [lecture, formMethods]);
 
 
     const onSubmit = (values: LectureFormValues) => {
-        onSave(values);
+        const finalValues: Lecture = { ...lecture, ...values };
+        if (!values.isSplit) {
+            finalValues.subjectName2 = '';
+            finalValues.subjectCode2 = '';
+            finalValues.facultyName2 = '';
+            finalValues.facultyCode2 = '';
+        }
+        onSave(finalValues);
         onOpenChange(false);
     };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px] bg-secondary border-primary/50">
+            <DialogContent className="sm:max-w-lg bg-secondary border-primary/50">
                 <DialogHeader>
-                    <DialogTitle className="text-primary text-glow">Edit Lecture</DialogTitle>
+                    <DialogTitle className="text-primary text-glow">Edit Lecture Slot</DialogTitle>
                 </DialogHeader>
                 <FormProvider {...formMethods}>
                     <Form {...formMethods}>
                         <form onSubmit={formMethods.handleSubmit(onSubmit)} className="space-y-4">
-                            <FormField control={formMethods.control} name="subjectName" render={({ field }) => (
-                                <FormItem><FormLabel><BookOpen className="w-4 h-4 mr-2 inline"/>Subject Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormField control={formMethods.control} name="isSplit" render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-background/30">
+                                    <div className="space-y-0.5">
+                                        <FormLabel>This is a split lab session</FormLabel>
+                                    </div>
+                                    <FormControl>
+                                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                    </FormControl>
+                                </FormItem>
                             )} />
-                            <FormField control={formMethods.control} name="subjectCode" render={({ field }) => (
-                                <FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Subject Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                            <FormField control={formMethods.control} name="facultyName" render={({ field }) => (
-                                <FormItem><FormLabel><User className="w-4 h-4 mr-2 inline"/>Faculty Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                            <FormField control={formMethods.control} name="facultyCode" render={({ field }) => (
-                                <FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Faculty Code</FormLabel><FormControl><Input {...field} placeholder="e.g. F001 (Optional)"/></FormControl><FormMessage /></FormItem>
-                            )} />
+
+                            <div className="space-y-4">
+                               <p className="text-sm font-semibold text-muted-foreground">{isSplit ? "Batch 1 Details" : "Lecture Details"}</p>
+                               <FormField control={formMethods.control} name="subjectName" render={({ field }) => (<FormItem><FormLabel><BookOpen className="w-4 h-4 mr-2 inline"/>Subject Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                               <FormField control={formMethods.control} name="subjectCode" render={({ field }) => (<FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Subject Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                               <FormField control={formMethods.control} name="facultyName" render={({ field }) => (<FormItem><FormLabel><User className="w-4 h-4 mr-2 inline"/>Faculty Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                               <FormField control={formMethods.control} name="facultyCode" render={({ field }) => (<FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Faculty Code</FormLabel><FormControl><Input {...field} placeholder="e.g. F001 (Optional)"/></FormControl><FormMessage /></FormItem>)} />
+                            </div>
+
+                            {isSplit && (
+                                <div className="space-y-4 pt-4 border-t border-white/10">
+                                    <p className="text-sm font-semibold text-muted-foreground">Batch 2 Details</p>
+                                    <FormField control={formMethods.control} name="subjectName2" render={({ field }) => (<FormItem><FormLabel><BookOpen className="w-4 h-4 mr-2 inline"/>Subject Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                    <FormField control={formMethods.control} name="subjectCode2" render={({ field }) => (<FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Subject Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                    <FormField control={formMethods.control} name="facultyName2" render={({ field }) => (<FormItem><FormLabel><User className="w-4 h-4 mr-2 inline"/>Faculty Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                    <FormField control={formMethods.control} name="facultyCode2" render={({ field }) => (<FormItem><FormLabel><Tag className="w-4 h-4 mr-2 inline"/>Faculty Code</FormLabel><FormControl><Input {...field} placeholder="e.g. F002 (Optional)"/></FormControl><FormMessage /></FormItem>)} />
+                                </div>
+                            )}
+
                             <div className="flex justify-end pt-4">
                                 <Button type="submit"><Save className="w-4 h-4 mr-2"/> Save Changes</Button>
                             </div>
@@ -257,7 +320,7 @@ export default function TimetablePage() {
         setIsDialogOpen(true);
     };
 
-    const handleSaveLecture = (values: LectureFormValues) => {
+    const handleSaveLecture = (values: Lecture) => {
         if (!timetable || !selectedLecture) return;
 
         const { day, lectureId } = selectedLecture;
@@ -267,10 +330,7 @@ export default function TimetablePage() {
         const lectureIndex = daySchedule.findIndex(l => l.id === lectureId);
 
         if (lectureIndex !== -1) {
-            daySchedule[lectureIndex] = {
-                ...daySchedule[lectureIndex],
-                ...values,
-            };
+            daySchedule[lectureIndex] = values;
             updatedSchedule[day] = daySchedule;
             setTimetable({ ...timetable, schedule: updatedSchedule });
             toast({ title: "Lecture Updated", description: "The lecture details have been saved locally. Click 'Save Timetable' to persist." });
@@ -386,8 +446,14 @@ export default function TimetablePage() {
                                                      return (
                                                         <td key={`${lecture.id}-${index}`} className="p-1 border border-border align-middle hover:bg-primary/10 cursor-pointer transition-colors" onClick={() => handleLectureClick(day, lecture.id)}>
                                                             {lecture.subjectCode || lecture.subjectName ? (
-                                                                <div className="text-[10px] font-semibold text-foreground">
-                                                                    {lecture.subjectCode || lecture.subjectName}
+                                                                <div className="text-[10px] font-semibold text-foreground flex flex-col justify-center h-full">
+                                                                    <div className="p-0.5">{lecture.subjectCode || lecture.subjectName}</div>
+                                                                    {lecture.isSplit && (
+                                                                        <>
+                                                                        <div className="border-t border-border/50 my-1 mx-2"></div>
+                                                                        <div className="p-0.5">{lecture.subjectCode2 || lecture.subjectName2}</div>
+                                                                        </>
+                                                                    )}
                                                                 </div>
                                                             ) : (
                                                                 <div className="flex items-center justify-center h-full min-h-[3rem]">
