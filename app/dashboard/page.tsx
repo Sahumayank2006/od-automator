@@ -9,9 +9,11 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 import { sendEmail } from './actions';
 import { AddClassDialog } from './AddClassDialog';
-import { Loader2, Upload, Eye } from 'lucide-react';
+import { Loader2, Upload, Eye, FileUp } from 'lucide-react';
 import { saveOdRequest, ODRequest } from '@/lib/database';
 import Papa from 'papaparse';
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { app } from '@/lib/firebase';
 
 
 import { Button } from '@/components/ui/button';
@@ -59,6 +61,8 @@ const classSchema = z.object({
 const odFormSchema = z.object({
   facultyCoordinatorName: z.string().min(1, "Faculty coordinator name is required."),
   facultyCoordinatorEmail: z.string().email("Please enter a valid email."),
+  cc: z.string().optional(),
+  bcc: z.string().optional(),
   eventName: z.string().min(1, "Event name is required."),
   eventDate: z.date({ required_error: "Event date is required." }),
   eventDay: z.string(),
@@ -115,6 +119,7 @@ export default function DashboardPage() {
     const [studentData, setStudentData] = useState<StudentData[]>([]);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [previewData, setPreviewData] = useState<ODFormValues | null>(null);
+    const [uploadedPdfUrl, setUploadedPdfUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -180,6 +185,8 @@ export default function DashboardPage() {
         defaultValues: {
             facultyCoordinatorName: '',
             facultyCoordinatorEmail: '',
+            cc: '',
+            bcc: '',
             eventName: '',
             eventDate: undefined,
             eventDay: '',
@@ -232,6 +239,7 @@ export default function DashboardPage() {
 
     const handleGeneratePdf = async (data: ODFormValues) => {
         setIsGeneratingPdf(true);
+        setUploadedPdfUrl(null);
         const { default: jsPDF } = await import('jspdf');
         await import('jspdf-autotable');
 
@@ -317,12 +325,28 @@ export default function DashboardPage() {
                 });
             });
         
+            const pdfBlob = doc.output('blob');
+            const storage = getStorage(app);
+            const fileName = `od_requests/OD_Application_${data.eventName.replace(/ /g, '_')}_${Date.now()}.pdf`;
+            const storageRef = ref(storage, fileName);
+
+            await uploadBytes(storageRef, pdfBlob);
+            const downloadURL = await getDownloadURL(storageRef);
+            setUploadedPdfUrl(downloadURL);
+            
+            toast({
+                title: "PDF Generated & Uploaded",
+                description: "The PDF has been successfully uploaded and is ready to be sent with the email.",
+            });
+
+            // Also download locally
             doc.save(`OD_Application_${data.eventName.replace(/ /g, '_')}.pdf`);
+
         } catch (error) {
-            console.error("Error generating PDF:", error);
+            console.error("Error generating or uploading PDF:", error);
             toast({
                 variant: "destructive",
-                title: "Error Generating PDF",
+                title: "Error with PDF",
                 description: error instanceof Error ? error.message : "An unknown error occurred.",
             });
         } finally {
@@ -333,19 +357,23 @@ export default function DashboardPage() {
     const handleSendEmail = async (data: ODFormValues) => {
         setIsSending(true);
         try {
-            const dbResponse = await saveOdRequest(data);
+            if (!uploadedPdfUrl) {
+                throw new Error("PDF has not been generated or uploaded yet. Please generate the PDF first.");
+            }
+            const dbResponse = await saveOdRequest(data, uploadedPdfUrl);
              if (!dbResponse.success) {
                 throw new Error(dbResponse.error);
             }
             toast({ title: "Request Saved", description: "Your OD request has been saved to the database." });
             
-            const response = await sendEmail(data);
+            const response = await sendEmail(data, uploadedPdfUrl);
             if (response.success) {
                 toast({
                     title: "Email Sent",
-                    description: "The OD request email has been sent successfully.",
+                    description: "The OD request email has been sent successfully with the PDF attached.",
                 });
                  form.reset();
+                 setUploadedPdfUrl(null);
             } else {
                 throw new Error(response.error);
             }
@@ -418,8 +446,22 @@ export default function DashboardPage() {
                                         )}/>
                                         <FormField control={form.control} name="facultyCoordinatorEmail" render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel className="flex items-center"><Mail className="w-4 h-4 mr-2 opacity-70"/>Email</FormLabel>
+                                                <FormLabel className="flex items-center"><Mail className="w-4 h-4 mr-2 opacity-70"/>To Email</FormLabel>
                                                 <FormControl><Input placeholder="e.g., jane.doe@example.com" {...field} /></FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}/>
+                                         <FormField control={form.control} name="cc" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="flex items-center"><Mail className="w-4 h-4 mr-2 opacity-70"/>CC (Optional)</FormLabel>
+                                                <FormControl><Input placeholder="e.g., another.person@example.com" {...field} /></FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}/>
+                                         <FormField control={form.control} name="bcc" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="flex items-center"><Mail className="w-4 h-4 mr-2 opacity-70"/>BCC (Optional)</FormLabel>
+                                                <FormControl><Input placeholder="e.g., supervisor@example.com" {...field} /></FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}/>
@@ -571,9 +613,9 @@ export default function DashboardPage() {
                                         <Eye className="mr-2 h-4 w-4" />Preview Email
                                     </Button>
                                     <Button type="button" disabled={isGeneratingPdf || isSending} onClick={form.handleSubmit(handleGeneratePdf)}>
-                                        {isGeneratingPdf ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : <><FileText className="mr-2 h-4 w-4" />Generate PDF</>}
+                                        {isGeneratingPdf ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : <><FileUp className="mr-2 h-4 w-4" />Generate & Upload PDF</>}
                                     </Button>
-                                    <Button type="button" disabled={isSending || isGeneratingPdf} onClick={form.handleSubmit(handleSendEmail)}>
+                                    <Button type="button" disabled={isSending || isGeneratingPdf || !uploadedPdfUrl} onClick={form.handleSubmit(handleSendEmail)}>
                                         {isSending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending...</> : <><Mail className="mr-2 h-4 w-4" />Save & Send Email</>}
                                     </Button>
                                 </div>

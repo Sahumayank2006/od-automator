@@ -1,3 +1,4 @@
+
 import { collection, doc, setDoc, getDocs, serverTimestamp, query, updateDoc, orderBy, deleteDoc } from "firebase/firestore";
 import { db } from './firebase';
 import type { ODFormValues } from "@/app/dashboard/page";
@@ -9,17 +10,19 @@ export interface ODRequest extends ODFormValues {
     id: string;
     createdAt: any; 
     status: ODRequestStatus;
+    pdfUrl?: string;
 }
 
 
-export async function saveOdRequest(data: ODFormValues) {
+export async function saveOdRequest(data: ODFormValues, pdfUrl: string) {
     try {
         const odRequestRef = doc(collection(db, "odRequests"));
         await setDoc(odRequestRef, {
             ...data,
             eventDate: data.eventDate.toISOString(),
             createdAt: serverTimestamp(),
-            status: "Pending" 
+            status: "Pending",
+            pdfUrl: pdfUrl,
         });
         return { success: true, id: odRequestRef.id };
     } catch (error) {
