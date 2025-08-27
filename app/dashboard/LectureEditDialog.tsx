@@ -36,7 +36,7 @@ interface LectureEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (data: LectureFormValues) => void;
-  initialData?: Partial<LectureFormValues>;
+  initialData?: Partial<LectureFormValues> & { course?: string };
   studentData: StudentData[];
 }
 
@@ -85,6 +85,13 @@ export function LectureEditDialog({ open, onOpenChange, onSave, initialData, stu
 
   const handleAutofillStudents = () => {
         const currentSection = initialData?.section;
+        const currentCourse = initialData?.course;
+        
+        if (!currentCourse) {
+            toast({ variant: 'destructive', title: 'Course not defined', description: 'Cannot autofill students without a class course.' });
+            return;
+        }
+
         if (!currentSection) {
             toast({ variant: 'destructive', title: 'Section not defined', description: 'Cannot autofill students without a class section.' });
             return;
@@ -95,13 +102,13 @@ export function LectureEditDialog({ open, onOpenChange, onSave, initialData, stu
             return;
         }
 
-        const sectionStudents = studentData.filter(s => s.section === currentSection);
+        const sectionStudents = studentData.filter(s => s.section === currentSection && s.course.toLowerCase() === currentCourse.toLowerCase());
 
         if (sectionStudents.length === 0) {
             toast({
                 variant: 'destructive',
                 title: 'No Students Found',
-                description: `Could not find any students for Section ${currentSection} in the loaded CSV.`,
+                description: `Could not find any students for ${currentCourse} Section ${currentSection} in the loaded CSV.`,
             });
             return;
         }
@@ -114,7 +121,7 @@ export function LectureEditDialog({ open, onOpenChange, onSave, initialData, stu
           
         toast({
             title: 'Autofill Successful',
-            description: `${sectionStudents.length} students from Section ${currentSection} have been added.`,
+            description: `${sectionStudents.length} students from ${currentCourse} Section ${currentSection} have been added.`,
         });
   };
 

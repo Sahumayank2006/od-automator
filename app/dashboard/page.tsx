@@ -32,6 +32,7 @@ export interface StudentData {
   name: string;
   enrollment: string;
   section: string;
+  course: string;
 }
 
 const lectureSchema = z.object({
@@ -125,14 +126,15 @@ export default function DashboardPage() {
                   name: (row as any).name?.trim(),
                   enrollment: (row as any)['enrolment no.']?.trim() || (row as any).enrollment?.trim(),
                   section: (row as any).section?.trim().toUpperCase(),
+                  course: (row as any).course?.trim(),
                 }))
-                .filter(student => student.name && student.enrollment && student.section);
+                .filter(student => student.name && student.enrollment && student.section && student.course);
     
               if (students.length === 0) {
                 toast({
                   variant: 'destructive',
                   title: 'No Students Found',
-                  description: 'Could not find valid student data in the CSV. Required columns: name, enrolment no., section.',
+                  description: 'Could not find valid student data in the CSV. Required columns: name, enrolment no., section, course.',
                 });
                 return;
               }
@@ -146,7 +148,7 @@ export default function DashboardPage() {
                toast({
                   variant: 'destructive',
                   title: 'CSV Parsing Error',
-                  description: 'Please check the CSV format. Required columns: name, enrolment no., section.',
+                  description: 'Please check the CSV format. Required columns: name, enrolment no., section, course.',
                 });
             }
           },
@@ -465,6 +467,7 @@ export default function DashboardPage() {
                                                     <TableRow>
                                                         <TableHead>Name</TableHead>
                                                         <TableHead>Enrollment No.</TableHead>
+                                                        <TableHead>Course</TableHead>
                                                         <TableHead>Section</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
@@ -473,6 +476,7 @@ export default function DashboardPage() {
                                                         <TableRow key={index}>
                                                             <TableCell>{student.name}</TableCell>
                                                             <TableCell>{student.enrollment}</TableCell>
+                                                            <TableCell>{student.course}</TableCell>
                                                             <TableCell>{student.section}</TableCell>
                                                         </TableRow>
                                                     ))}
