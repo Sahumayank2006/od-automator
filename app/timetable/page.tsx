@@ -112,6 +112,17 @@ const bcaSem5LectureTimings = [
     { id: 'L7', fromTime: '16:15', toTime: '17:10' },
 ];
 
+const btechCse7LectureTimings = [
+    { id: 'L1', fromTime: '09:15', toTime: '10:10' },
+    { id: 'L2', fromTime: '10:15', toTime: '11:10' },
+    { id: 'L3', fromTime: '11:15', toTime: '12:10' },
+    { id: 'LUNCH', fromTime: '12:15', toTime: '13:10' },
+    { id: 'L4', fromTime: '13:15', toTime: '14:10' },
+    { id: 'L5', fromTime: '14:15', toTime: '15:10' },
+    { id: 'L6', fromTime: '15:15', toTime: '16:10' },
+    { id: 'L7', fromTime: '16:15', toTime: '17:10' },
+];
+
 
 const generateInitialSchedule = (timings: typeof defaultLectureTimings): Record<string, Lecture[]> => {
     const schedule: Record<string, Lecture[]> = {};
@@ -270,11 +281,14 @@ export default function TimetablePage() {
         if (selectedClass.course === 'BCA' && selectedClass.semester === '5') {
             return bcaSem5LectureTimings;
         }
+        if (selectedClass.course === 'B.Tech' && selectedClass.program === 'CSE' && selectedClass.semester === '7') {
+            return btechCse7LectureTimings;
+        }
         if (selectedClass.semester === '1') {
             return semester1LectureTimings;
         }
         return defaultLectureTimings;
-    }, [selectedClass.course, selectedClass.semester]);
+    }, [selectedClass.course, selectedClass.program, selectedClass.semester]);
 
     useEffect(() => {
         async function fetchTimetables() {
@@ -490,4 +504,5 @@ export default function TimetablePage() {
             )}
         </>
     );
-}
+
+    
