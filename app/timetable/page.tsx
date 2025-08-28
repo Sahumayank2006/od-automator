@@ -235,6 +235,7 @@ const LectureEditDialog = ({ open, onOpenChange, lecture, onSave }: { open: bool
 const courseOptions = [
     { value: 'B.Tech', label: 'B.Tech' },
     { value: 'BCA', label: 'BCA' },
+    { value: 'B.Sc', label: 'B.Sc' },
     { value: 'MCA', label: 'MCA' },
 ];
 
@@ -490,4 +491,3 @@ export default function TimetablePage() {
         </>
     );
 }
-

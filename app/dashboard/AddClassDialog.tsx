@@ -46,6 +46,7 @@ export type ClassFormValues = z.infer<typeof classSchema>;
 const courseOptions = [
     { value: 'B.Tech', label: 'B.Tech' },
     { value: 'BCA', label: 'BCA' },
+    { value: 'B.Sc', label: 'B.Sc' },
     { value: 'MCA', label: 'MCA' },
 ];
 
