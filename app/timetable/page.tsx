@@ -458,7 +458,8 @@ export default function TimetablePage() {
                                             <tr key={day}>
                                                 <td className="p-1 border border-border font-semibold sticky left-0 bg-secondary/80 z-10 text-xs">{day}</td>
                                                 {timetable.schedule[day] && timetable.schedule[day].map((lecture, index) => {
-                                                     if (lecture.id.endsWith('LUNCH')) {
+                                                     const lectureTimingDef = lectureTimings.find(lt => lt.fromTime === lecture.fromTime);
+                                                     if (lectureTimingDef?.id === 'LUNCH') {
                                                         return <td key={`${lecture.id}-${index}`} className="p-1 border border-border bg-muted/30 font-semibold text-muted-foreground align-middle text-xs">LUNCH</td>
                                                      }
                                                      return (
@@ -506,3 +507,4 @@ export default function TimetablePage() {
     );
 
     
+}
