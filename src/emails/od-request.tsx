@@ -61,9 +61,66 @@ const hr = {
 };
 
 export const ODRequestEmail = ({ data }: ODRequestEmailProps) => {
-  const activityDateTime = data.eventDate ? 
-    `${format(data.eventDate, "MMMM d, yyyy")} from ${data.eventFromTime} to ${data.eventToTime}` 
-    : 'N/A';
+  const getSemesterWithSuffix = (sem: string) => {
+    if (sem === '1') return '1st';
+    if (sem === '2') return '2nd';
+    if (sem === '3') return '3rd';
+    return `${sem}th`;
+  };
+
+  const getDayName = (date: Date) => {
+    return format(date, 'EEEE');
+  };
+
+  const eventDateFormatted = data.eventDate ? format(data.eventDate, "dd-MMM-yyyy") : 'N/A';
+  const eventDay = data.eventDate ? getDayName(data.eventDate) : data.eventDay || 'N/A';
+  
+  // Extract all unique students
+  const studentMap = new Map<string, { course: string, name: string, enrollNo: string, contact: string }>();
+  
+  data.classes.forEach(c => {
+    const courseStr = `${c.course} ${c.program} Sec ${c.section} ${getSemesterWithSuffix(c.semester)} Sem`;
+    c.lectures.forEach(l => {
+      const studentsRows = l.students.split('\n').filter(s => s.trim() !== '');
+      studentsRows.forEach(studentStr => {
+        studentStr = studentStr.trim();
+        if (!studentMap.has(studentStr)) {
+          const parts = studentStr.split(' ');
+          let enrollNo = '';
+          let name = studentStr;
+          let contact = '';
+          
+          const enrollRegex = /[A-Za-z0-9]{6,}/;
+          const contactRegex = /^\d{10}$/;
+
+          // Find contact
+          const contactMatch = parts.find(p => contactRegex.test(p));
+          if (contactMatch) {
+            contact = contactMatch;
+            parts.splice(parts.indexOf(contactMatch), 1);
+          }
+          
+          // Find enrollment (after contact is removed)
+          const enrollMatch = parts.find(p => enrollRegex.test(p) && /\d/.test(p));
+          if (enrollMatch) {
+            enrollNo = enrollMatch;
+            parts.splice(parts.indexOf(enrollMatch), 1);
+          }
+
+          name = parts.join(' ');
+          
+          studentMap.set(studentStr, {
+            course: courseStr,
+            name: name,
+            enrollNo: enrollNo,
+            contact: contact
+          });
+        }
+      });
+    });
+  });
+
+  const studentsList = Array.from(studentMap.values());
 
   return (
     <Html>
@@ -72,51 +129,56 @@ export const ODRequestEmail = ({ data }: ODRequestEmailProps) => {
       <Body style={main}>
         <Container style={container}>
           <Section style={box}>
-            <Heading style={h1}>On-Duty Request</Heading>
-            <Text style={text}>
-              Dear {data.facultyCoordinatorName},
+            <Text style={{ ...text, marginBottom: '20px' }}>
+              Respected {data.facultyCoordinatorName},<br />
+              Kindly consider the attendance of the following students-
             </Text>
-            <Text style={text}>
-              This is to certify that the students listed below were on duty for the following activity:
-            </Text>
-            <Hr style={hr} />
-            <Text style={sectionTitle}>Event Details:</Text>
-            <Text style={text}>
-              <strong>Purpose:</strong> {data.eventName}<br/>
-              <strong>Date & Time:</strong> {activityDateTime}
-            </Text>
-            <Hr style={hr} />
 
-            {data.classes.map((classInfo, classIndex) => (
-                <Section key={classIndex}>
-                    <Text style={sectionTitle}>
-                       Class: {classInfo.course} {classInfo.program} - Sem {classInfo.semester} (Sec {classInfo.section})
-                    </Text>
-                    {classInfo.lectures.map((lecture, lectureIndex) => {
-                        const students = lecture.students.split('\n').filter(s => s.trim() !== '');
-                        return (
-                            <Section key={lectureIndex} style={{marginBottom: '20px'}}>
-                                <Text style={{...text, fontStyle: 'italic'}}>
-                                    Lecture from {lecture.fromTime} to {lecture.toTime}
-                                </Text>
-                                <Row>
-                                    <Column style={{...text, paddingRight: '10px'}}><strong>Subject:</strong> {lecture.subject}</Column>
-                                    <Column style={text}><strong>Faculty:</strong> {lecture.faculty}</Column>
-                                </Row>
-                                <Text style={{...text, marginTop: '10px'}}>
-                                    <strong>Students Involved:</strong>
-                                </Text>
-                                <ul style={{paddingLeft: '20px', margin: 0}}>
-                                    {students.map((student, studentIndex) => (
-                                        <li key={studentIndex} style={text}>{student}</li>
-                                    ))}
-                                </ul>
-                            </Section>
-                        )
-                    })}
-                   {classIndex < data.classes.length - 1 && <Hr style={hr} />}
-                </Section>
-            ))}
+            <Text style={{ ...text, marginTop: '30px', marginBottom: '10px' }}>
+              ---{eventDateFormatted}---({eventDay})
+            </Text>
+
+            <table style={{ width: '100%', borderCollapse: 'collapse', paddingBottom: '20px' }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', padding: '0 5px 10px 0', fontSize: '15px' }}>Time.</th>
+                  <th style={{ textAlign: 'left', padding: '0 5px 10px 0', fontSize: '15px' }}>Subject.</th>
+                  <th style={{ textAlign: 'left', padding: '0 5px 10px 0', fontSize: '15px' }}>Faculty.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.classes.flatMap(c => c.lectures).map((lecture, index) => (
+                  <tr key={index}>
+                    <td style={{ padding: '0 5px 5px 0', fontSize: '15px' }}>{lecture.fromTime} - {lecture.toTime}</td>
+                    <td style={{ padding: '0 5px 5px 0', fontSize: '15px' }}>{lecture.subject}</td>
+                    <td style={{ padding: '0 5px 5px 0', fontSize: '15px' }}>{lecture.faculty}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '30px' }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', padding: '0 5px 10px 0', fontSize: '15px', borderBottom: '1px solid #ddd' }}>S.No</th>
+                  <th style={{ textAlign: 'left', padding: '0 5px 10px 0', fontSize: '15px', borderBottom: '1px solid #ddd' }}>Enrollment No.</th>
+                  <th style={{ textAlign: 'left', padding: '0 5px 10px 0', fontSize: '15px', borderBottom: '1px solid #ddd' }}>Student Name</th>
+                  <th style={{ textAlign: 'left', padding: '0 5px 10px 0', fontSize: '15px', borderBottom: '1px solid #ddd' }}>Eligible Course</th>
+                  <th style={{ textAlign: 'left', padding: '0 5px 10px 0', fontSize: '15px', borderBottom: '1px solid #ddd' }}>Contact No.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {studentsList.map((student, index) => (
+                  <tr key={index}>
+                    <td style={{ padding: '5px 5px 5px 0', fontSize: '15px', borderBottom: '1px solid #eee' }}>{index + 1}</td>
+                    <td style={{ padding: '5px 5px 5px 0', fontSize: '15px', borderBottom: '1px solid #eee' }}>{student.enrollNo || '-'}</td>
+                    <td style={{ padding: '5px 5px 5px 0', fontSize: '15px', borderBottom: '1px solid #eee' }}>{student.name || '-'}</td>
+                    <td style={{ padding: '5px 5px 5px 0', fontSize: '15px', borderBottom: '1px solid #eee' }}>{student.course}</td>
+                    <td style={{ padding: '5px 5px 5px 0', fontSize: '15px', borderBottom: '1px solid #eee' }}>{student.contact || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
             <Hr style={hr} />
             <Text style={text}>
